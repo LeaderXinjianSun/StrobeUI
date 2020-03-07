@@ -144,7 +144,7 @@ namespace BingLibrary.hjb.PLC
             return PLCWrite("MutiM", coilAddress, s1);
         }
         //一次读160个M
-        public ObservableCollection<bool> ReadMultiMCoil(int coilStartAddress)
+        public bool[] ReadMultiMCoil(int coilStartAddress)
         {
             string temp0 = PLCRead("M", coilStartAddress, "01", "00a0");
             string temp1 = "";
@@ -162,7 +162,7 @@ namespace BingLibrary.hjb.PLC
 
             string[] temp2 = new string[40];
 
-            ObservableCollection<bool> result = new ObservableCollection<bool>();
+            bool[] result = new bool[160];
 
             string temp160 = "";
             try
@@ -182,14 +182,7 @@ namespace BingLibrary.hjb.PLC
             {
                 for (int i = 0; i < 160; i++)
                 {
-                    if (temp160[i] == '1')
-                    {
-                        result.Add(true);
-                    }
-                    else
-                    {
-                        result.Add(false);
-                    }
+                    result[i] = temp160[i] == '1';
                 }
             }
             catch { }
@@ -197,32 +190,32 @@ namespace BingLibrary.hjb.PLC
         }
 
         //一次读30个D
-        public ObservableCollection<double> readMultiD(int coilStartAdress)
+        public double[] readMultiD(int coilStartAdress)
         {
             string temp0;
             temp0 = PLCRead("D", coilStartAdress, "01", "001e");
-            ObservableCollection<double> result = new ObservableCollection<double>();
+            double[] result = new double[30];
             try
             {
                 for (int i = 0; i < 30; i++)
                 {
-                    result.Add(Convert.ToInt32(temp0.Substring(8 * i, 8), 16));
+                    result[i] = Convert.ToInt32(temp0.Substring(8 * i, 8), 16);
                 }
             }
             catch { }
 
             return result;
         }
-        public ObservableCollection<double> readMultiHD(int coilStartAdress)
+        public double[] readMultiHD(int coilStartAdress)
         {
             string temp0;
             temp0 = PLCRead("HD", coilStartAdress, "01", "001e");
-            ObservableCollection<double> result = new ObservableCollection<double>();
+            double[] result = new double[30];
             try
             {
                 for (int i = 0; i < 30; i++)
                 {
-                    result.Add(Convert.ToInt32(temp0.Substring(8 * i, 8), 16));
+                    result[i] = Convert.ToInt32(temp0.Substring(8 * i, 8), 16);
                 }
             }
             catch { }
