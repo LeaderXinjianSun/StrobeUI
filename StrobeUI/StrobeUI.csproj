@@ -91,7 +91,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Models\Csvfile.cs" />
+    <Compile Include="Models\Inifile.cs" />
+    <Compile Include="Models\Mysql.cs" />
+    <Compile Include="Models\Oracle.cs" />
+    <Compile Include="Models\ThingetPLC.cs" />
+    <Compile Include="Models\UDP.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
+    <Compile Include="ViewModels\SampleNgItemViewModel.cs" />
     <Compile Include="Views\SampleWindow.xaml.cs">
       <DependentUpon>SampleWindow.xaml</DependentUpon>
     </Compile>
