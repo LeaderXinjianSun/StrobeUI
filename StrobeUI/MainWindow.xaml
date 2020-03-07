@@ -5,8 +5,61 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"        
         xmlns:local="clr-namespace:StrobeUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="{Binding UIName}" Height="600" Width="800" WindowStartupLocation ="CenterScreen" ResizeMode="CanResize"
+        Icon="five_64px_1236460_easyicon.net.ico" Closing="Window_Closing">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2.5*"></RowDefinition>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="30"></RowDefinition>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid>
+            <Grid.Background>
+                <ImageBrush ImageSource="D4X俯视图截图01.jpg"></ImageBrush>
+            </Grid.Background>
+        </Grid>
+        <TextBox Margin="1" x:Name="MsgTextBox" Text="{Binding MessageStr}" Grid.Row="1" IsReadOnly="True" TextChanged="MsgTextBox_TextChanged"  FontSize="14" Background="Black" FontFamily="宋体" Foreground="White" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" BorderThickness="0"></TextBox>
+        <Grid Grid.Column="1" Grid.RowSpan="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="50"></RowDefinition>
+                <RowDefinition></RowDefinition>
+                <RowDefinition></RowDefinition>
+                <RowDefinition Height="150"></RowDefinition>
+            </Grid.RowDefinitions>
+            <Grid Grid.Row="2" Grid.RowSpan="2">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Height="30" Width="80" Content="样本" Margin="10,1" Command="{Binding SampleCommand}"></Button>
+                        <Button Height="30" Width="80" Content="手动" Command="{Binding ManulSampleCommand}"></Button>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="1">
+                        <TextBlock Text="上次测样本时刻:"/>
+                        <TextBlock Text="{Binding LastSampleTime}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="1">
+                        <TextBlock Text="下次测样本时刻:"/>
+                        <TextBlock Text="{Binding NextSampleTime}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" Margin="1">
+                        <TextBlock Text="样本倒计时:"/>
+                        <TextBlock Foreground="Purple" FontSize="20" Text="{Binding SpanSampleTime}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <Button Height="30" Width="80" Content="功能" Margin="10,1" Command="{Binding FuncTestCommand}"></Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+        </Grid>
+        <StatusBar Grid.Row="2" Grid.ColumnSpan="2">
+            <Label>PLC</Label>
+            <Ellipse Fill="{Binding PLCStatus}" Width="20" Height="20"></Ellipse>
+            <Label>Cycle</Label>
+            <TextBlock Text="{Binding PLCCycle}"></TextBlock>
+            <TextBlock Text="ms"></TextBlock>
+        </StatusBar>
     </Grid>
 </Window>
