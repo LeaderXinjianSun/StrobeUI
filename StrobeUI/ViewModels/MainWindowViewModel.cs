@@ -406,6 +406,94 @@ namespace StrobeUI.ViewModels
                 this.RaisePropertyChanged("SampleText");
             }
         }
+        private bool bigDataEditIsReadOnly;
+
+        public bool BigDataEditIsReadOnly
+        {
+            get { return bigDataEditIsReadOnly; }
+            set
+            {
+                bigDataEditIsReadOnly = value;
+                this.RaisePropertyChanged("BigDataEditIsReadOnly");
+            }
+        }
+        private string pM;
+
+        public string PM
+        {
+            get { return pM; }
+            set
+            {
+                pM = value;
+                this.RaisePropertyChanged("PM");
+            }
+        }
+        private string gROUP1;
+
+        public string GROUP1
+        {
+            get { return gROUP1; }
+            set
+            {
+                gROUP1 = value;
+                this.RaisePropertyChanged("GROUP1");
+            }
+        }
+        private string tRACK;
+
+        public string TRACK
+        {
+            get { return tRACK; }
+            set
+            {
+                tRACK = value;
+                this.RaisePropertyChanged("TRACK");
+            }
+        }
+        private string mACID;
+
+        public string MACID
+        {
+            get { return mACID; }
+            set
+            {
+                mACID = value;
+                this.RaisePropertyChanged("MACID");
+            }
+        }
+        private string lIGHT_ID;
+
+        public string LIGHT_ID
+        {
+            get { return lIGHT_ID; }
+            set
+            {
+                lIGHT_ID = value;
+                this.RaisePropertyChanged("LIGHT_ID");
+            }
+        }
+        private string bigDataPeramEdit;
+
+        public string BigDataPeramEdit
+        {
+            get { return bigDataPeramEdit; }
+            set
+            {
+                bigDataPeramEdit = value;
+                this.RaisePropertyChanged("BigDataPeramEdit");
+            }
+        }
+        private bool alarmButtonIsEnabled;
+
+        public bool AlarmButtonIsEnabled
+        {
+            get { return alarmButtonIsEnabled; }
+            set
+            {
+                alarmButtonIsEnabled = value;
+                this.RaisePropertyChanged("AlarmButtonIsEnabled");
+            }
+        }
 
         #endregion
         #region 方法绑定
@@ -414,6 +502,8 @@ namespace StrobeUI.ViewModels
         public DelegateCommand SampleCommand { get; set; }
         public DelegateCommand SampleWindowPasswordConfirmCommand { get; set; }
         public DelegateCommand SampleSaveCommand { get; set; }
+        public DelegateCommand BigDataPeramEditCommand { get; set; }
+        public DelegateCommand BigDataAlarmGetCommand { get; set; }
         #endregion
         #region 自定义变量
         string iniParameterPath = System.Environment.CurrentDirectory + "\\Parameter.ini";
@@ -427,6 +517,10 @@ namespace StrobeUI.ViewModels
         List<AlarmData> AlarmList = new List<AlarmData>();
         string LastBanci;
         DateTime SamDateBigin, SamStartDatetime;
+        int LampColor = 1;
+        int LampGreenElapse, LampGreenFlickerElapse, LampYellowElapse, LampYellowFlickerElapse, LampRedElapse;
+        string CurrentAlarm = "";
+        Stopwatch LampGreenSw = new Stopwatch();
         #endregion
         #region 构造函数
         public MainWindowViewModel()
@@ -437,94 +531,129 @@ namespace StrobeUI.ViewModels
             this.SampleCommand = new DelegateCommand(new Action(this.SampleCommandExecute));
             this.SampleWindowPasswordConfirmCommand = new DelegateCommand(new Action(this.SampleWindowPasswordConfirmCommandExecute));
             this.SampleSaveCommand = new DelegateCommand(new Action(this.SampleSaveCommandExecute));
+            this.BigDataPeramEditCommand = new DelegateCommand(new Action(this.BigDataPeramEditCommandExecute));
+            this.BigDataAlarmGetCommand = new DelegateCommand(new Action(this.BigDataAlarmGetCommandCommandExecute));
             Run();
         }
         #endregion
         #region 自定义函数
         void Init()
         {
-            this.UIName = "D5XUI 20200307";
-            this.MessageStr = "";
-            #region 样本
-            LastSampleTime = Convert.ToDateTime(Inifile.INIGetStringValue(iniParameterPath, "Sample", "LastSample", "2020/1/1 00:00:00"));
-            this.NGItems = new ObservableCollection<SampleNgItemViewModel>();
-            for (int i = 0; i < 10; i++)
-            {
-                this.NGItems.Add(new SampleNgItemViewModel
-                {
-                    Id = i + 1,
-                    NgItem = Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItem" + (i + 1).ToString(), "OK"),
-                    NGItemClassify = Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItemClassify" + (i + 1).ToString(), "ZP")
-                });
-            }
-            IsSampleCheck = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "Sample", "IsSampleCheck", "True"));
-            NGItemCount = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItemCount", "9"));
-            SamMode = Inifile.INIGetStringValue(iniParameterPath, "Sample", "SamMode", "2h");
-            ZPMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "ZPMID", "999");
-            FCTMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "FCTMID", "999");
-            #endregion
-            #region UDP网络
-            string ip;
-            int localport, targetport;
-            string ip_l = Inifile.INIGetStringValue(iniParameterPath, "转盘", "LocalIP", "192.168.0.1");
-            ip = Inifile.INIGetStringValue(iniParameterPath, "转盘", "TargetIP", "192.168.0.1");
-            localport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "转盘", "LocalPort", "8001"));
-            targetport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "转盘", "TargetPort", "5000"));
-            udp1.Connect(localport, ip_l, targetport, ip);
-            ip_l = Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "LocalIP", "192.168.0.1");
-            ip = Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "TargetIP", "192.168.0.10");
-            localport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "LocalPort", "8002"));
-            targetport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "TargetPort", "5000"));
-            udp2.Connect(localport, ip_l, targetport, ip);
-            #endregion
-            #region 机台
-            ZhuanpanBarcode1 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "ZhuanpanBarcode1", "null");
-            ZhuanpanBarcode2 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "ZhuanpanBarcode2", "null");
-            SimoBarcode1 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "SimoBarcode1", "null");
-            SimoBarcode2 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "SimoBarcode2", "null");
-            LingminduBarcode1 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "LingminduBarcode1", "null");
-            LingminduBarcode2 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "LingminduBarcode2", "null");
-            LastBanci = Inifile.INIGetStringValue(iniParameterPath, "Summary", "LastBanci", "null");
-            ZPMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "ZPMID", "ATKC4-012");
-            FCTMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "FCTMID", "ATKC4-012");
-            #endregion
-            #region 报警文档
             try
             {
-                if (File.Exists(alarmExcelPath))
+                #region 初始化页面内容
+                this.UIName = "D5XUI 20200307";
+                this.MessageStr = "";
+                this.BigDataEditIsReadOnly = true;
+                this.BigDataPeramEdit = "Edit";
+                this.AlarmButtonIsEnabled = true;
+                #endregion
+                #region 样本
+                LastSampleTime = Convert.ToDateTime(Inifile.INIGetStringValue(iniParameterPath, "Sample", "LastSample", "2020/1/1 00:00:00"));
+                this.NGItems = new ObservableCollection<SampleNgItemViewModel>();
+                for (int i = 0; i < 10; i++)
                 {
-                    FileInfo existingFile = new FileInfo(alarmExcelPath);
-                    using (ExcelPackage package = new ExcelPackage(existingFile))
+                    this.NGItems.Add(new SampleNgItemViewModel
                     {
-                        // get the first worksheet in the workbook
-                        ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
-                        for (int i = 1; i <= worksheet.Dimension.End.Row; i++)
+                        Id = i + 1,
+                        NgItem = Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItem" + (i + 1).ToString(), "OK"),
+                        NGItemClassify = Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItemClassify" + (i + 1).ToString(), "ZP")
+                    });
+                }
+                IsSampleCheck = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "Sample", "IsSampleCheck", "True"));
+                NGItemCount = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItemCount", "9"));
+                SamMode = Inifile.INIGetStringValue(iniParameterPath, "Sample", "SamMode", "2h");
+                ZPMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "ZPMID", "999");
+                FCTMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "FCTMID", "999");
+                #endregion
+                #region UDP网络
+                string ip;
+                int localport, targetport;
+                string ip_l = Inifile.INIGetStringValue(iniParameterPath, "转盘", "LocalIP", "192.168.0.1");
+                ip = Inifile.INIGetStringValue(iniParameterPath, "转盘", "TargetIP", "192.168.0.1");
+                localport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "转盘", "LocalPort", "8001"));
+                targetport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "转盘", "TargetPort", "5000"));
+                udp1.Connect(localport, ip_l, targetport, ip);
+                ip_l = Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "LocalIP", "192.168.0.1");
+                ip = Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "TargetIP", "192.168.0.10");
+                localport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "LocalPort", "8002"));
+                targetport = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "灵敏度", "TargetPort", "5000"));
+                udp2.Connect(localport, ip_l, targetport, ip);
+                #endregion
+                #region 机台
+                ZhuanpanBarcode1 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "ZhuanpanBarcode1", "null");
+                ZhuanpanBarcode2 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "ZhuanpanBarcode2", "null");
+                SimoBarcode1 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "SimoBarcode1", "null");
+                SimoBarcode2 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "SimoBarcode2", "null");
+                LingminduBarcode1 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "LingminduBarcode1", "null");
+                LingminduBarcode2 = Inifile.INIGetStringValue(iniParameterPath, "Barcode", "LingminduBarcode2", "null");
+                LastBanci = Inifile.INIGetStringValue(iniParameterPath, "Summary", "LastBanci", "null");
+                ZPMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "ZPMID", "ATKC4-012");
+                FCTMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "FCTMID", "ATKC4-012");
+                PM = Inifile.INIGetStringValue(iniParameterPath, "BigData", "PM", "D53G STROBE");
+                GROUP1 = Inifile.INIGetStringValue(iniParameterPath, "BigData", "GROUP1", "NA");
+                TRACK = Inifile.INIGetStringValue(iniParameterPath, "BigData", "TRACK", "NA");
+                MACID = Inifile.INIGetStringValue(iniParameterPath, "BigData", "MACID", "NA");
+                LIGHT_ID = Inifile.INIGetStringValue(iniParameterPath, "BigData", "LIGHT_ID", "NA");
+                LampGreenElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampGreenElapse", "0"));
+                LampGreenFlickerElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampGreenFlickerElapse", "0"));
+                LampYellowElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampYellowElapse", "0"));
+                LampYellowFlickerElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampYellowFlickerElapse", "0"));
+                LampRedElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampRedElapse", "0"));
+                #endregion
+                #region 报警文档
+                try
+                {
+                    if (File.Exists(alarmExcelPath))
+                    {
+                        FileInfo existingFile = new FileInfo(alarmExcelPath);
+                        using (ExcelPackage package = new ExcelPackage(existingFile))
                         {
-                            AlarmData ad = new AlarmData();
-                            ad.Code = worksheet.Cells["A" + i.ToString()].Value == null ? "Null" : worksheet.Cells["A" + i.ToString()].Value.ToString();
-                            ad.Content = worksheet.Cells["B" + i.ToString()].Value == null ? "Null" : worksheet.Cells["B" + i.ToString()].Value.ToString();
-                            ad.Start = DateTime.Now;
-                            ad.End = DateTime.Now;
-                            ad.State = false;
-                            AlarmList.Add(ad);
+                            // get the first worksheet in the workbook
+                            ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
+                            for (int i = 1; i <= worksheet.Dimension.End.Row; i++)
+                            {
+                                AlarmData ad = new AlarmData();
+                                ad.Code = worksheet.Cells["A" + i.ToString()].Value == null ? "Null" : worksheet.Cells["A" + i.ToString()].Value.ToString();
+                                ad.Content = worksheet.Cells["B" + i.ToString()].Value == null ? "Null" : worksheet.Cells["B" + i.ToString()].Value.ToString();
+                                ad.Start = DateTime.Now;
+                                ad.End = DateTime.Now;
+                                ad.State = false;
+                                AlarmList.Add(ad);
+                            }
                         }
                     }
+                    else
+                    {
+                        AddMessage("D4X报警.xlsx 文件不存在");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    AddMessage("D4X报警.xlsx 文件不存在");
+                    AddMessage(ex.Message);
                 }
+                #endregion
+                #region 更新本地时间
+                SXJLibrary.Oracle oraDB = new SXJLibrary.Oracle("qddb04.eavarytech.com", "mesdb04", "ictdata", "ictdata*168");
+                if (oraDB.connect())
+                {
+                    string oracleTime = oraDB.OraclDateTime();
+                    AddMessage("更新数据库时间到本地" + oracleTime);
+                }
+                #endregion
             }
             catch (Exception ex)
             {
                 AddMessage(ex.Message);
             }
-            #endregion
+           
         }
         void Run()
         {
             PLCRun();
             ZPUDPRun();
+            UIRun();
+            BigDataRun();
         }
         async void PLCRun()
         {
@@ -542,8 +671,8 @@ namespace StrobeUI.ViewModels
                 if (plcstate)
                 {
                     M11000 = await Task<bool[]>.Run(() => { return Xinjie.ReadMultiMCoil(11000); }); //读160个M
+                    bool[] M100 = await Task<bool[]>.Run(() => { return Xinjie.ReadMultiMCoil(100); }); //读160个M
                     await Task.Run(()=> { Xinjie.WriteW(1201, rd.Next(0, 99).ToString()); });//往D1201写一个随机数
-                    #region 灵敏度
                     if (first)
                     {
                         first = false;
@@ -556,6 +685,8 @@ namespace StrobeUI.ViewModels
                         M11153 = M11000[153];//灵敏度2PASS
                         M11154 = M11000[154];//灵敏度2NG
                     }
+                    #region 灵敏度
+
                     if (M11140 != M11000[140])
                     {
                         M11140 = M11000[140];
@@ -686,6 +817,38 @@ namespace StrobeUI.ViewModels
                             LingminduJieGuo2Background = "Gray";
                         }
                     }
+                    #endregion
+                    #region 灯信号
+                    if (M100[6])//闪红
+                    {
+                        LampColor = 5;
+                    }
+                    else
+                    {
+                        if (M100[4])//闪黄
+                        {
+                            LampColor = 4;
+                        }
+                        else
+                        {
+                            if (M100[5])//长黄
+                            {
+                                LampColor = 3;
+                            }
+                            else
+                            {
+                                if (M100[3])//闪绿
+                                {
+                                    LampColor = 2;
+                                }
+                                else
+                                {
+                                    LampColor = 1;//常绿
+                                }
+                            }
+                        }
+                    }
+
                     #endregion
                 }
                 else
@@ -904,12 +1067,197 @@ namespace StrobeUI.ViewModels
                 {
                     LastBanci = GetBanci();
                     Inifile.INIWriteValue(iniParameterPath, "Summary", "LastBanci", LastBanci);
-                    //WriteMachineData();
-                    AddMessage(LastBanci + " 换班数据清零");
+                    WriteMachineData();
+                    LampGreenElapse = 0;
+                    Inifile.INIWriteValue(iniParameterPath, "BigData", "LampGreenElapse", LampGreenElapse.ToString());
+                    LampGreenFlickerElapse = 0;
+                    Inifile.INIWriteValue(iniParameterPath, "BigData", "LampGreenFlickerElapse", LampGreenFlickerElapse.ToString());
+                    LampYellowElapse = 0;
+                    Inifile.INIWriteValue(iniParameterPath, "BigData", "LampYellowElapse", LampYellowElapse.ToString());
+                    LampYellowFlickerElapse = 0;
+                    Inifile.INIWriteValue(iniParameterPath, "BigData", "LampYellowFlickerElapse", LampYellowFlickerElapse.ToString());
+                    LampRedElapse = 0;
+                    Inifile.INIWriteValue(iniParameterPath, "BigData", "LampRedElapse", LampRedElapse.ToString());
+
+
+                    //更新数据库数据
+
+                    string result = await Task<string>.Run(() =>
+                    {
+                        try
+                        {
+                            int _result = -999;
+                            Mysql mysql = new Mysql();
+                            if (mysql.Connect())
+                            {
+                                string stm = string.Format("UPDATE HA_F4_LIGHT SET LIGHT = '{3}',SDATE = '{4}',STIME = '{5}',ALARM = '{6}',CLASS = '{7}',TIME_1 = '0',TIME_2 = '0',TIME_3 = '0',TIME_4 = '0',TIME_5 = '0' WHERE PM = '{0}' AND LIGHT_ID = '{1}' AND MACID = '{2}'"
+                                    , PM, LIGHT_ID, MACID, LampColor, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("mmddss"), "NA", GetBanci());
+                                _result = mysql.executeQuery(stm);
+                            }
+                            mysql.DisConnect();
+                            return _result.ToString();
+                        }
+                        catch (Exception ex)
+                        {
+                            return ex.Message;
+                        }
+                    });
+
+                    AddMessage(LastBanci + " 换班数据清零。数据库更新" + result);
                     Xinjie.SetM(11099, true);//通知PLC换班，计数清空
                 }
                 #endregion
             }
+        }
+        async void BigDataRun()
+        {
+            int _LampColor = LampColor;
+            LampGreenSw.Start();
+            while (true)
+            {
+                await Task.Delay(1000);//每秒刷新               
+                #region 报警
+                if (M11000 != null && plcstate)
+                {
+                    for (int i = 0; i < AlarmList.Count; i++)
+                    {
+                        if (M11000[i] != AlarmList[i].State && LampGreenSw.Elapsed.TotalMinutes > 3)
+                        {
+                            AlarmList[i].State = M11000[i];
+                            if (AlarmList[i].State)
+                            {
+                                CurrentAlarm = AlarmList[i].Content;
+
+                                AlarmList[i].Start = DateTime.Now;
+                                AlarmList[i].End = DateTime.Now;
+                                AddMessage(AlarmList[i].Code + AlarmList[i].Content + "发生");
+
+                                string result = await Task<string>.Run(() =>
+                                {
+                                    try
+                                    {
+                                        int _result = -999;
+                                        Mysql mysql = new Mysql();
+                                        if (mysql.Connect())
+                                        {
+                                            string stm = string.Format("INSERT INTO HA_F4_DATA_ALARM (PM, GROUP1,TRACK,MACID,NAME,SSTARTDATE,SSTARTTIME,SSTOPDATE,SSTOPTIME,TIME,CLASS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}')"
+                                                , PM, GROUP1, TRACK, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("hhmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("hhmmss"), "0", GetBanci());
+                                            _result = mysql.executeQuery(stm);
+                                        }
+                                        mysql.DisConnect();
+                                        return _result.ToString();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        return ex.Message;
+                                    }
+                                });
+                                AddMessage("插入报警" + result);
+
+                                AlarmAction(i);//等待报警结束
+                            }
+                            
+                        }
+                    }
+
+                }
+                #endregion
+                #region 灯号更新
+                switch (LampColor)
+                {
+                    case 1:
+                        LampGreenElapse += 1;
+                        Inifile.INIWriteValue(iniParameterPath, "BigData", "LampGreenElapse", LampGreenElapse.ToString());
+                        break;
+                    case 2:
+                        LampGreenFlickerElapse += 1;
+                        Inifile.INIWriteValue(iniParameterPath, "BigData", "LampGreenFlickerElapse", LampGreenFlickerElapse.ToString());
+                        break;
+                    case 3:
+                        LampYellowElapse += 1;
+                        Inifile.INIWriteValue(iniParameterPath, "BigData", "LampYellowElapse", LampYellowElapse.ToString());
+                        break;
+                    case 4:
+                        LampYellowFlickerElapse += 1;
+                        Inifile.INIWriteValue(iniParameterPath, "BigData", "LampYellowFlickerElapse", LampYellowFlickerElapse.ToString());
+                        break;
+                    case 5:
+                        LampRedElapse += 1;
+                        Inifile.INIWriteValue(iniParameterPath, "BigData", "LampRedElapse", LampRedElapse.ToString());
+                        break;
+                    default:
+                        break;
+                }
+                if (_LampColor != LampColor)
+                {
+                    _LampColor = LampColor;
+                    if (LampColor == 1)
+                    {
+                        LampGreenSw.Restart();
+                    }
+
+                    string result = await Task<string>.Run(() =>
+                    {
+                        try
+                        {
+                            int _result = -999;
+                            Mysql mysql = new Mysql();
+                            if (mysql.Connect())
+                            {
+                                string currentAlarm = LampColor == 4 ? CurrentAlarm : "NA";
+                                string stm = string.Format("UPDATE HA_F4_LIGHT SET LIGHT = '{3}',SDATE = '{4}',STIME = '{5}',ALARM = '{6}',CLASS = '{7}',TIME_1 = '{8}',TIME_2 = '{9}',TIME_3 = '{10}',TIME_4 = '{11}',TIME_5 = '{12}' WHERE PM = '{0}' AND LIGHT_ID = '{1}' AND MACID = '{2}'"
+                                    , PM, LIGHT_ID, MACID, LampColor, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("mmddss"), currentAlarm, GetBanci(), ((double)LampGreenElapse / 60).ToString("F2"), ((double)LampGreenFlickerElapse / 60).ToString("F2"), ((double)LampYellowElapse / 60).ToString("F2")
+                                    , ((double)LampYellowFlickerElapse / 60).ToString("F2"), ((double)LampRedElapse / 60).ToString("F2"));
+                                _result = mysql.executeQuery(stm);
+                            }
+                            mysql.DisConnect();
+                            return _result.ToString();
+                        }
+                        catch (Exception ex)
+                        {
+                            return ex.Message;
+                        }
+                    });
+                    AddMessage("更新灯信号" + result);
+                }
+                if (LampColor != 1)
+                {
+                    LampGreenSw.Reset();
+                }
+                #endregion
+            }
+
+        }
+        async void AlarmAction(int i)
+        {
+            while (M11000[i])
+            {
+                await Task.Delay(100);
+            }
+            AlarmList[i].End = DateTime.Now;
+            AddMessage(AlarmList[i].Code + AlarmList[i].Content + "解除");
+            TimeSpan time = AlarmList[i].End - AlarmList[i].Start;
+            string result = await Task<string>.Run(() =>
+            {
+                try
+                {
+                    int _result = -999;
+                    Mysql mysql = new Mysql();
+                    if (mysql.Connect())
+                    {
+                        string stm = string.Format("UPDATE HA_F4_DATA_ALARM SET SSTOPDATE = '{5}',SSTOPTIME = '{6}',TIME = '{7}' WHERE PM = '{0}' AND MACID = '{1}' AND NAME = '{2}' AND SSTARTDATE = '{3}' AND SSTARTTIME = '{4}'"
+                            , PM, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("hhmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("hhmmss"), time.TotalMinutes.ToString("F2"));
+                        _result = mysql.executeQuery(stm);
+                    }
+                    mysql.DisConnect();
+                    return _result.ToString();
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
+                }
+            });
+            AddMessage("更新报警" + result);
         }
         private bool CheckSampleFromDt()
         {
@@ -1008,6 +1356,47 @@ namespace StrobeUI.ViewModels
             }
 
         }
+        private void WriteMachineData()
+        {
+            string excelpath = @"D:\D5XMachineData.xlsx";
+
+            try
+            {
+                FileInfo fileInfo = new FileInfo(excelpath);
+                if (!File.Exists(excelpath))
+                {
+                    using (ExcelPackage package = new ExcelPackage(fileInfo))
+                    {
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("MachineData");
+                        worksheet.Cells[1, 1].Value = "绿灯常亮累计时长（单位min）";
+                        worksheet.Cells[1, 2].Value = "绿灯闪烁累计时长（单位min）";
+                        worksheet.Cells[1, 3].Value = "黄灯常亮累计时长（单位min）";
+                        worksheet.Cells[1, 4].Value = "黄灯闪烁累计时长（单位min）";
+                        worksheet.Cells[1, 5].Value = "红灯常亮累计时长（单位min）";
+                        package.Save();
+                    }
+                }
+
+
+                using (ExcelPackage package = new ExcelPackage(fileInfo))
+                {
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
+                    int newrow = worksheet.Dimension.End.Row + 1;
+                    worksheet.Cells[newrow, 1].Value = System.DateTime.Now.ToString();
+                    worksheet.Cells[newrow, 2].Value = LampGreenElapse;
+                    worksheet.Cells[newrow, 2].Value = LampGreenFlickerElapse;
+                    worksheet.Cells[newrow, 3].Value = LampYellowElapse;
+                    worksheet.Cells[newrow, 4].Value = LampYellowFlickerElapse;
+                    worksheet.Cells[newrow, 5].Value = LampRedElapse;
+                    package.Save();
+                }
+                AddMessage("保存机台生产数据完成");
+            }
+            catch (Exception ex)
+            {
+                AddMessage(ex.Message);
+            }
+        }
         string GetPassWord()
         {
             int day = System.DateTime.Now.Day;
@@ -1089,7 +1478,7 @@ namespace StrobeUI.ViewModels
             {
                 MessageStr += "\n";
             }
-            MessageStr += System.DateTime.Now.ToString("yyyyMMdd HH:mm:ss") + " " + str;
+            MessageStr += System.DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + " " + str;
         }
         #endregion
         #region 方法绑定执行函数
@@ -1140,6 +1529,82 @@ namespace StrobeUI.ViewModels
             Inifile.INIWriteValue(iniParameterPath, "Sample", "FCTMID", FCTMID);
             QuitSampleWindow = !QuitSampleWindow;
             AddMessage("样本参数保存完成");
+        }
+        private void BigDataPeramEditCommandExecute()
+        {
+            if (BigDataEditIsReadOnly)
+            {
+                BigDataEditIsReadOnly = false;
+                BigDataPeramEdit = "Save";
+            }
+            else
+            {
+                Inifile.INIWriteValue(iniParameterPath, "BigData", "PM", PM);
+                Inifile.INIWriteValue(iniParameterPath, "BigData", "GROUP1", GROUP1);
+                Inifile.INIWriteValue(iniParameterPath, "BigData", "TRACK", TRACK);
+                Inifile.INIWriteValue(iniParameterPath, "BigData", "MACID", MACID);
+                Inifile.INIWriteValue(iniParameterPath, "BigData", "LIGHT_ID", LIGHT_ID);
+                BigDataEditIsReadOnly = true;
+                BigDataPeramEdit = "Edit";
+                AddMessage("大数据参数保存");
+            }
+        }
+        private async void BigDataAlarmGetCommandCommandExecute()
+        {
+            AlarmButtonIsEnabled = false;
+
+            var rst = await Task<string>.Run(()=> {
+                try
+                {
+                    if (!Directory.Exists(Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd"))))
+                    {
+                        Directory.CreateDirectory(Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd")));
+                    }
+                    string path = Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("yyyyMMddHHmmss")+ "AlarmTotal.csv");
+
+
+                    Mysql mysql = new Mysql();
+                    if (mysql.Connect())
+                    {
+                        string stm = string.Format("SELECT * FROM HA_F4_DATA_ALARM WHERE PM = '{0}' AND MACID = '{1}' CLASS = '{2}'", PM, MACID, GetBanci());
+                        DataSet ds = mysql.Select(stm);
+
+                        DataTable dt = ds.Tables["table0"];
+                        if (dt.Rows.Count > 0)
+                        {
+                            string strHead = DateTime.Now.ToString("yyyyMMddHHmmss") + "AlarmTotal";
+                            string strColumns = "";
+                            for (int i = 0; i < dt.Columns.Count; i++)
+                            {
+                                strColumns += dt.Columns[i].ColumnName + ",";
+                            }
+                            strColumns = strColumns.Substring(0, strColumns.Length - 1);
+                            Csvfile.dt2csv(dt, path, strHead, strColumns);
+
+                            Process process1 = new Process();
+                            process1.StartInfo.FileName = path;
+                            process1.StartInfo.Arguments = "";
+                            process1.StartInfo.WindowStyle = ProcessWindowStyle.Maximized;
+                            process1.Start();
+                        }
+
+                    }
+                    mysql.DisConnect();
+
+
+
+                    
+                }
+                catch (Exception ex)
+                {
+
+                    return ex.Message;
+                }
+                return "查询报警结束";
+            });
+
+            AddMessage(rst);
+            AlarmButtonIsEnabled = true;
         }
         #endregion
     }

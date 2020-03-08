@@ -44,16 +44,40 @@
         <TextBox Margin="1" x:Name="MsgTextBox" Text="{Binding MessageStr}" Grid.Row="1" IsReadOnly="True" TextChanged="MsgTextBox_TextChanged"  FontSize="14" Background="Black" FontFamily="宋体" Foreground="White" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" BorderThickness="0"></TextBox>
         <Grid Grid.Column="1" Grid.RowSpan="2">
             <Grid.RowDefinitions>
-                <RowDefinition Height="50"></RowDefinition>
                 <RowDefinition></RowDefinition>
                 <RowDefinition></RowDefinition>
-                <RowDefinition Height="150"></RowDefinition>
             </Grid.RowDefinitions>
-            <Grid Grid.Row="2" Grid.RowSpan="2">
+            <GroupBox Header="大数据">
+                <StackPanel Orientation="Vertical">
+                    <StackPanel Orientation="Horizontal" Margin="1">
+                        <TextBlock Text="机种" Width="60"></TextBlock>
+                        <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding PM}"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="1">
+                        <TextBlock Text="组别" Width="60"></TextBlock>
+                        <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding GROUP1}"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="1">
+                        <TextBlock Text="轨道" Width="60"></TextBlock>
+                        <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding TRACK}"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="1">
+                        <TextBlock Text="机台编号" Width="60"></TextBlock>
+                        <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding MACID}"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="1">
+                        <TextBlock Text="三色灯编号" Width="60"></TextBlock>
+                        <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding LIGHT_ID}"></TextBox>
+                    </StackPanel>
+                    <Button Content="{Binding BigDataPeramEdit}" Width="60" Height="30" HorizontalAlignment="Right" Margin="10" Command="{Binding BigDataPeramEditCommand}"></Button>
+                    <Button Content="Alarm" Width="60" Height="30" HorizontalAlignment="Right" Margin="10,0" IsEnabled="{Binding AlarmButtonIsEnabled}" Command="{Binding BigDataAlarmGetCommand}"></Button>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Header="样本" Grid.Row="1">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Button Height="30" Width="80" Content="样本" Margin="10,1" Command="{Binding SampleCommand}"></Button>
-                        <Button Height="30" Width="80" Content="手动" Command="{Binding ManulSampleCommand}"></Button>
+                        <Button Height="30" Width="60" Content="样本" Margin="10,1" Command="{Binding SampleCommand}"></Button>
+                        <Button Height="30" Width="60" Content="手动" Command="{Binding ManulSampleCommand}"></Button>
                     </StackPanel>
                     <StackPanel Orientation="Vertical" Margin="1">
                         <TextBlock Text="上次测样本时刻:"/>
@@ -68,10 +92,10 @@
                         <TextBlock Foreground="Purple" FontSize="20" Text="{Binding SpanSampleTime}"/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Button Height="30" Width="80" Content="功能" Margin="10,1" Command="{Binding FuncTestCommand}"></Button>
+                        <Button Height="30" Width="60" Content="功能" Margin="10,1" Command="{Binding FuncTestCommand}"></Button>
                     </StackPanel>
                 </StackPanel>
-            </Grid>
+            </GroupBox>
         </Grid>
         <StatusBar Grid.Row="2" Grid.ColumnSpan="2">
             <Label>PLC</Label>
