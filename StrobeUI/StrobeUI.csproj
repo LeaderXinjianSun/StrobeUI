@@ -132,6 +132,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Models\AlarmData.cs" />
+    <Compile Include="Models\CPublic.cs" />
+    <Compile Include="Models\CReader.cs" />
     <Compile Include="Models\Csvfile.cs" />
     <Compile Include="Models\DateTimeUtility.cs" />
     <Compile Include="Models\Inifile.cs" />

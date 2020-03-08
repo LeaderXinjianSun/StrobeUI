@@ -16,6 +16,7 @@ using StrobeUI.Models;
 using OfficeOpenXml;
 using System.Data;
 using SXJLibrary;
+using 读写器530SDK;
 
 namespace StrobeUI.ViewModels
 {
@@ -521,6 +522,7 @@ namespace StrobeUI.ViewModels
         int LampGreenElapse, LampGreenFlickerElapse, LampYellowElapse, LampYellowFlickerElapse, LampRedElapse;
         string CurrentAlarm = "";
         Stopwatch LampGreenSw = new Stopwatch();
+        CReader reader = new CReader(); int CardStatus = 1;
         #endregion
         #region 构造函数
         public MainWindowViewModel()
@@ -547,6 +549,7 @@ namespace StrobeUI.ViewModels
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
                 this.AlarmButtonIsEnabled = true;
+                this.SampleGridVisibility = "Collapsed";
                 #endregion
                 #region 样本
                 LastSampleTime = Convert.ToDateTime(Inifile.INIGetStringValue(iniParameterPath, "Sample", "LastSample", "2020/1/1 00:00:00"));
@@ -981,6 +984,10 @@ namespace StrobeUI.ViewModels
         }
         async void UIRun()
         {
+            int cardret = 1;
+            string COM = Inifile.INIGetStringValue(iniParameterPath, "读卡器", "COM", "COM19").Replace("COM","");
+            reader.OpenComm(int.Parse(COM), 9600);
+            int cardcount = 0;
             while (true)
             {
                 await Task.Delay(100);
@@ -1105,6 +1112,31 @@ namespace StrobeUI.ViewModels
 
                     AddMessage(LastBanci + " 换班数据清零。数据库更新" + result);
                     Xinjie.SetM(11099, true);//通知PLC换班，计数清空
+                }
+                #endregion
+                #region 刷卡
+                if (cardcount++ > 9)
+                {
+                    cardcount = 0;
+                    try
+                    {
+                        byte[] buf = new byte[256];
+                        byte[] snr = CPublic.CharToByte("FF FF FF FF FF");
+
+                        CardStatus = await Task.Run<int>(() => { return reader.MF_Read(0, 0, 0, 1, ref snr[0], ref buf[0]); });
+                        if (cardret != CardStatus)
+                        {
+                            cardret = CardStatus;
+                            if (CardStatus == 0)
+                            {
+                                AddMessage(Encoding.UTF8.GetString(buf));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        AddMessage(ex.Message);
+                    }
                 }
                 #endregion
             }
@@ -1343,11 +1375,11 @@ namespace StrobeUI.ViewModels
         {
             try
             {
-                if (!Directory.Exists("C:\\Debug\\" + DateTime.Now.ToString("yyyyMMdd")))
+                if (!Directory.Exists(Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd"))))
                 {
-                    Directory.CreateDirectory(@"C:\\Debug\\" + DateTime.Now.ToString("yyyyMMdd"));
+                    Directory.CreateDirectory(Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd")));
                 }
-                string path = "C:\\Debug\\" + DateTime.Now.ToString("yyyyMMdd") + "\\" + DateTime.Now.ToString("yyyyMMdd") + "Barcode.csv";
+                string path = Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd"), "Barcode.csv");
                 Csvfile.savetocsv(path, new string[] { DateTime.Now.ToString(), bar, rst, index });
             }
             catch
@@ -1484,7 +1516,18 @@ namespace StrobeUI.ViewModels
         #region 方法绑定执行函数
         private void FuncTestCommandExecute()
         {
-
+            //Inifile.INIWriteValue(iniParameterPath, "转盘", "LocalIP", "127.0.0.1");
+            //Inifile.INIWriteValue(iniParameterPath, "转盘", "TargetIP", "127.0.0.1");
+            //Inifile.INIWriteValue(iniParameterPath, "转盘", "LocalPort", "8001");
+            //Inifile.INIWriteValue(iniParameterPath, "转盘", "TargetPort", "8000");
+            //Inifile.INIWriteValue(iniParameterPath, "灵敏度", "LocalIP", "127.0.0.1");
+            //Inifile.INIWriteValue(iniParameterPath, "灵敏度", "TargetIP", "127.0.0.1");
+            //Inifile.INIWriteValue(iniParameterPath, "灵敏度", "LocalPort", "8002");
+            //Inifile.INIWriteValue(iniParameterPath, "灵敏度", "TargetPort", "8020");
+            //Inifile.INIWriteValue(iniParameterPath, "读卡器", "COM", "COM21");
+            //byte[] aa = new byte[256];
+            //aa[0] = 78; aa[1] = 98;
+            //AddMessage(Encoding.UTF8.GetString(aa));
         }
         private void ManulSampleCommandExecute()
         {
@@ -1566,7 +1609,7 @@ namespace StrobeUI.ViewModels
                     Mysql mysql = new Mysql();
                     if (mysql.Connect())
                     {
-                        string stm = string.Format("SELECT * FROM HA_F4_DATA_ALARM WHERE PM = '{0}' AND MACID = '{1}' CLASS = '{2}'", PM, MACID, GetBanci());
+                        string stm = string.Format("SELECT * FROM HA_F4_DATA_ALARM WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}'", PM, MACID, GetBanci());
                         DataSet ds = mysql.Select(stm);
 
                         DataTable dt = ds.Tables["table0"];
