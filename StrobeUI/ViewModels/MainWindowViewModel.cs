@@ -544,7 +544,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200307";
+                this.UIName = "D5XUI 20200309";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -985,8 +985,6 @@ namespace StrobeUI.ViewModels
         async void UIRun()
         {
             int cardret = 1;
-            string COM = Inifile.INIGetStringValue(iniParameterPath, "读卡器", "COM", "COM19").Replace("COM","");
-            reader.OpenComm(int.Parse(COM), 9600);
             int cardcount = 0;
             while (true)
             {
@@ -1112,30 +1110,87 @@ namespace StrobeUI.ViewModels
 
                     AddMessage(LastBanci + " 换班数据清零。数据库更新" + result);
                     Xinjie.SetM(11099, true);//通知PLC换班，计数清空
+                    Xinjie.SetM(11155, false);
                 }
                 #endregion
                 #region 刷卡
                 if (cardcount++ > 9)
                 {
                     cardcount = 0;
-                    try
+                    if (M11000 != null && plcstate)
                     {
-                        byte[] buf = new byte[256];
-                        byte[] snr = CPublic.CharToByte("FF FF FF FF FF");
-                        CardStatus = await Task.Run<int>(() => { return reader.MF_Read(0, 0, 0, 1, ref snr[0], ref buf[0]); });
-                        if (cardret != CardStatus)
+                        try
                         {
-                            cardret = CardStatus;
-                            if (CardStatus == 0)
+                            byte[] buf = new byte[256];//用来存储卡信息的buff
+                            byte[] snr = CPublic.CharToByte("FF FF FF FF FF FF");//应该是一种读码格式，照抄即可。
+                            if (!M11000[155])
                             {
-                                AddMessage(Encoding.UTF8.GetString(buf));
+                                if (IntPtr.Zero == reader.GetHComm())
+                                {
+                                    string COM = Inifile.INIGetStringValue(iniParameterPath, "读卡器", "COM", "COM19").Replace("COM", "");
+                                    reader.OpenComm(int.Parse(COM), 9600);
+                                }
+                                //刷卡；若刷到卡返回0，没刷到回1。
+                                CardStatus =  reader.MF_Read(0, 0, 0, 1, ref snr[0], ref buf[0]);
+                                //采用上升沿信号，防止卡放在读卡机上，重复执行查询动作。寄卡放一次，才查询一次，要再查询，需要重新刷卡。
+                                if (cardret != CardStatus)
+                                {
+                                    cardret = CardStatus;
+                                    if (CardStatus == 0)//刷到卡了
+                                    {
+                                        string strTmp = "";
+                                        //测试发现，卡返回的是16个HEX（十六进制）数，放在byte[]数组内，需要用一下方法转成字符串格式。
+                                        for (int i = 0; i < 16; i++)
+                                        {
+                                            strTmp += string.Format("{0:X2} ", buf[i]);
+                                        }
+                                        //删除转换后，字符串内的空格。这些HEX字符并不是员工编号字符的编码，需要用读到的字符串在数据库里查找，
+                                        //在记录里再匹配员工信息和权限
+                                        string barcode = strTmp.Replace(" ", "");
+                                        AddMessage("刷卡 " + barcode);
+                                        SXJLibrary.Oracle oraDB = new SXJLibrary.Oracle("qddb04.eavarytech.com", "mesdb04", "ictdata", "ictdata*168");
+                                        if (oraDB.isConnect())
+                                        {
+                                            string stm = string.Format("SELECT * FROM CAP_TABLE WHERE BARCODE = '{0}'", barcode);
+                                            DataSet s = oraDB.executeQuery(stm);
+                                            DataTable dt = s.Tables[0];
+                                            if (dt.Rows.Count > 0)//查询到数据条目大于0，即查到了
+                                            {
+                                                //取查到的第一行记录，一般只有1行。如果有多行，也只取第一行。
+                                                DataRow dr = dt.Rows[0];
+                                                //筛选一下数据，如果我们需要的“工号”、“姓名”和“权限”对应的栏位为空，则数据不合格。
+                                                if (dr["OPERATORID"] != DBNull.Value && dr["DATA0"] != DBNull.Value && dr["RESULT"] != DBNull.Value)
+                                                {
+                                                    //打印出匹配到的结果，并返回给下位机。
+                                                    AddMessage("工号 " + (string)dr["OPERATORID"] + " 姓名 " + (string)dr["DATA0"] + " 权限 " + (string)dr["RESULT"]);
+                                                    if ((string)dr["RESULT"] == "PASS")
+                                                    {
+                                                        Xinjie.SetM(11155, true);
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    AddMessage("数据库记录信息不完整");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                AddMessage("未查询到卡信息");
+                                            }
+                                        }
+                                        oraDB.disconnect();
+                                    }
+                                }
                             }
+
+                        }
+                        catch (Exception ex)
+                        {
+                            reader.CloseComm();
+                            AddMessage(ex.Message);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        AddMessage(ex.Message);
-                    }
+
                 }
                 #endregion
             }
