@@ -6,7 +6,7 @@
         xmlns:metro="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
         xmlns:local="clr-namespace:StrobeUI"
         mc:Ignorable="d"
-        Title="{Binding UIName}" Height="600" Width="800" WindowStartupLocation ="CenterScreen" ResizeMode="CanResize"
+        Title="{Binding UIName}" Height="691" Width="1024" WindowStartupLocation ="CenterScreen" ResizeMode="CanResize"
         Icon="five_64px_1236460_easyicon.net.ico" Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
@@ -27,17 +27,33 @@
                 <RowDefinition></RowDefinition>
                 <RowDefinition Height="50"></RowDefinition>
             </Grid.RowDefinitions>
-            <Canvas Grid.Row="1">
-                <TextBlock Canvas.Top="50" Canvas.Left="10" FontWeight="Bold" FontSize="15" Text="{Binding ZhuanpanBarcode2}" Background="{Binding ZhuanpanBarcode2Background,FallbackValue=White}"></TextBlock>
-                <TextBlock Canvas.Top="100" Canvas.Left="10" FontWeight="Bold" FontSize="15" Text="{Binding ZhuanpanBarcode1}" Background="{Binding ZhuanpanBarcode1Background,FallbackValue=White}"></TextBlock>
-                <TextBlock Canvas.Top="50" Canvas.Left="295" FontWeight="Bold" FontSize="15" Text="{Binding SimoBarcode2}" Background="{Binding SimoBarcode2Background,FallbackValue=White}"></TextBlock>
-                <TextBlock Canvas.Top="100" Canvas.Left="295" FontWeight="Bold" FontSize="15" Text="{Binding SimoBarcode1}" Background="{Binding SimoBarcode1Background,FallbackValue=White}"></TextBlock>
-                <TextBlock Canvas.Top="200" Canvas.Left="295" FontWeight="Bold" FontSize="15" Text="{Binding LingminduBarcode2}" Background="{Binding LingminduBarcode2Background,FallbackValue=White}"></TextBlock>
-                <TextBlock Canvas.Top="250" Canvas.Left="295" FontWeight="Bold" FontSize="15" Text="{Binding LingminduBarcode1}" Background="{Binding LingminduBarcode1Background,FallbackValue=White}"></TextBlock>
-                <TextBlock Canvas.Top="200" Canvas.Left="520"  FontSize="15" Width="30" Text="{Binding LingminduJieGuo2}" Background="{Binding LingminduJieGuo2Background,FallbackValue=White}"></TextBlock>
-                <TextBlock Canvas.Top="250" Canvas.Left="520"  FontSize="15" Width="30" Text="{Binding LingminduJieGuo1}" Background="{Binding LingminduJieGuo1Background,FallbackValue=White}"></TextBlock>
-                <Label Canvas.Bottom="50" Canvas.Left="2" Content="红色:NG&#13;绿色:OK&#13;白色:清空&#13;灰色:无结果" Foreground="Yellow" FontWeight="Bold"></Label>
-            </Canvas>
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                    <ColumnDefinition></ColumnDefinition>
+                    <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                    <ColumnDefinition Width="0.5*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Row="1" FontWeight="Bold" FontSize="15" Text="{Binding ZhuanpanBarcode2}" Background="{Binding ZhuanpanBarcode2Background,FallbackValue=White}"></TextBlock>
+                <TextBlock Grid.Row="2" FontWeight="Bold" FontSize="15" Text="{Binding ZhuanpanBarcode1}" Background="{Binding ZhuanpanBarcode1Background,FallbackValue=White}"></TextBlock>
+                <TextBlock Grid.Row="1" Grid.Column="2" FontWeight="Bold" FontSize="15" Text="{Binding SimoBarcode2}" Background="{Binding SimoBarcode2Background,FallbackValue=White}"></TextBlock>
+                <TextBlock Grid.Row="2" Grid.Column="2" FontWeight="Bold" FontSize="15" Text="{Binding SimoBarcode1}" Background="{Binding SimoBarcode1Background,FallbackValue=White}"></TextBlock>
+                <TextBlock Grid.Row="4" Grid.Column="2" FontWeight="Bold" FontSize="15" Text="{Binding LingminduBarcode2}" Background="{Binding LingminduBarcode2Background,FallbackValue=White}"></TextBlock>
+                <TextBlock Grid.Row="5" Grid.Column="2" FontWeight="Bold" FontSize="15" Text="{Binding LingminduBarcode1}" Background="{Binding LingminduBarcode1Background,FallbackValue=White}"></TextBlock>
+                <TextBlock Grid.Row="4" Grid.Column="4"  FontSize="15" Text="{Binding LingminduJieGuo2}" Background="{Binding LingminduJieGuo2Background,FallbackValue=White}"></TextBlock>
+                <TextBlock Grid.Row="5" Grid.Column="4"  FontSize="15" Text="{Binding LingminduJieGuo1}" Background="{Binding LingminduJieGuo1Background,FallbackValue=White}"></TextBlock>
+
+                <Label Grid.Row="4" Grid.RowSpan="3" Content="红色:NG&#13;绿色:OK&#13;白色:清空&#13;灰色:无结果" Foreground="Violet" FontSize="20" FontWeight="Bold"></Label>
+            </Grid>
             <Grid Background="GreenYellow" Visibility="{Binding SampleGridVisibility}">
                 <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="26" Text="{Binding SampleText}"></TextBlock>
             </Grid>
@@ -47,55 +63,80 @@
             <Grid.RowDefinitions>
                 <RowDefinition></RowDefinition>
                 <RowDefinition></RowDefinition>
+                <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
             <GroupBox Header="大数据">
                 <StackPanel Orientation="Vertical">
                     <StackPanel Orientation="Horizontal" Margin="1">
-                        <TextBlock Text="机种" Width="60"></TextBlock>
+                        <TextBlock VerticalAlignment="Center" Text="机种" Width="60"></TextBlock>
                         <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding PM}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="1">
-                        <TextBlock Text="组别" Width="60"></TextBlock>
+                        <TextBlock VerticalAlignment="Center" Text="组别" Width="60"></TextBlock>
                         <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding GROUP1}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="1">
-                        <TextBlock Text="轨道" Width="60"></TextBlock>
+                        <TextBlock VerticalAlignment="Center" Text="轨道" Width="60"></TextBlock>
                         <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding TRACK}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="1">
-                        <TextBlock Text="机台编号" Width="60"></TextBlock>
+                        <TextBlock VerticalAlignment="Center" Text="机台编号" Width="60"></TextBlock>
                         <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding MACID}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="1">
-                        <TextBlock Text="三色灯编号" Width="60"></TextBlock>
+                        <TextBlock VerticalAlignment="Center" Text="三色灯编号" Width="60"></TextBlock>
                         <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding LIGHT_ID}"></TextBox>
                     </StackPanel>
-                    <Button Content="{Binding BigDataPeramEdit}" Width="60" Height="30" HorizontalAlignment="Right" Margin="10" Command="{Binding BigDataPeramEditCommand}"></Button>
-                    <Button Content="Alarm" Width="60" Height="30" HorizontalAlignment="Right" Margin="10,0" IsEnabled="{Binding AlarmButtonIsEnabled}" Command="{Binding BigDataAlarmGetCommand}"></Button>
+                    <StackPanel Orientation="Horizontal" Margin="1">
+                        <Button Content="{Binding BigDataPeramEdit}" Width="60" Height="30" HorizontalAlignment="Right" Margin="5" Command="{Binding BigDataPeramEditCommand}"></Button>
+                        <Button Content="Alarm" Width="60" Height="30" IsEnabled="{Binding AlarmButtonIsEnabled}" Command="{Binding BigDataAlarmGetCommand}"></Button>
+                    </StackPanel>
+                    
                 </StackPanel>
             </GroupBox>
             <GroupBox Header="样本" Grid.Row="1">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal">
-                        <Button Height="30" Width="60" Content="样本" Margin="10,1" Command="{Binding SampleCommand}"></Button>
+                        <Button Height="30" Width="60" Content="样本" Margin="5" Command="{Binding SampleCommand}"></Button>
                         <Button Height="30" Width="60" Content="手动" Command="{Binding ManulSampleCommand}"></Button>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="1">
+                    <StackPanel Orientation="Horizontal" Margin="1">
                         <TextBlock Text="上次测样本时刻:"/>
                         <TextBlock Text="{Binding LastSampleTime}"/>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="1">
+                    <StackPanel Orientation="Horizontal" Margin="1">
                         <TextBlock Text="下次测样本时刻:"/>
                         <TextBlock Text="{Binding NextSampleTime}"/>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical" Margin="1">
+                    <StackPanel Orientation="Horizontal" Margin="1">
                         <TextBlock Text="样本倒计时:"/>
                         <TextBlock Foreground="Purple" FontSize="20" Text="{Binding SpanSampleTime}"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Height="30" Width="60" Content="功能" Margin="10,1" Command="{Binding FuncTestCommand}"></Button>
-                    </StackPanel>
                 </StackPanel>
+            </GroupBox>
+            <GroupBox Grid.Row="2" Header="卷料">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <TextBlock TextWrapping = "Wrap" Text="{Binding FilmText}"></TextBlock>
+                    <StackPanel Grid.Row="1">
+                        <StackPanel Orientation="Horizontal" Margin="1">
+                            <TextBlock Text="卷料余量: "></TextBlock>
+                            <TextBlock Text="{Binding CurrentFilmCount}"></TextBlock>
+                            <TextBlock Text="/"></TextBlock>
+                            <TextBlock Text="{Binding MaxFilmCount}"></TextBlock>
+                        </StackPanel>
+                        <metro:MetroProgressBar  Margin="1,4,20,4" Value="{Binding CurrentFilmCount}" Maximum="{Binding MaxFilmCount}" IsIndeterminate ="{Binding FilmProcessBarIsIndeterminate}"  Height="22"></metro:MetroProgressBar>
+                        <StackPanel Orientation="Horizontal" Margin="1">
+                            <Button Content="扫卷料码" Width="60" Height="30" Command="{Binding FilmScanCommand}"></Button>
+                            <Button Visibility="Collapsed" Height="30" Width="60" Content="功能" Margin="5" Command="{Binding FuncTestCommand}"></Button>
+                        </StackPanel>
+                    </StackPanel>
+
+                </Grid>
+                
             </GroupBox>
         </Grid>
         <StatusBar Grid.Row="2" Grid.ColumnSpan="2">

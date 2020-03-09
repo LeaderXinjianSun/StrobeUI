@@ -1,0 +1,53 @@
+﻿<metro:MetroWindow x:Class="StrobeUI.Views.FilmScanWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:metro="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        xmlns:local="clr-namespace:StrobeUI.Views"
+        mc:Ignorable="d"
+        Title="FilmScanWindow" Height="300" Width="800" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        <TextBox Height="100" Width="600" FontSize="14" TabIndex = "0" TextWrapping="Wrap" VerticalScrollBarVisibility="Visible" Text="{Binding FilmTextInput}"></TextBox>
+        <Canvas Grid.Row="1">
+            <ListBox ItemsSource="{Binding FilmRuleItems}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Width="20" Text="{Binding Id}" Margin="5" Background="Beige"/>
+                            <TextBox Width="100" Text="{Binding CodeRule1}" Margin="5"/>
+                            <TextBox Width="100" Text="{Binding CodeRule2}" Margin="5"/>
+                            <TextBox Width="100" Text="{Binding CodeRule3}" Margin="5"/>
+                            <TextBox Width="100" Text="{Binding CodeRule4}" Margin="5"/>
+                            <RadioButton Width="30" IsChecked="{Binding IsChecked}" GroupName="Group1" Margin="5"></RadioButton>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <StackPanel Canvas.Right="100">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Width="50" VerticalAlignment="Center" Text="版序"></TextBlock>
+                    <TextBox Width="100" Text="{Binding REVISION}"></TextBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Width="50" VerticalAlignment="Center" Text="工令"></TextBlock>
+                    <TextBox Width="100" Text="{Binding WORKNO}"></TextBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Width="50" VerticalAlignment="Center" Text="线别"></TextBlock>
+                    <TextBox Width="100" Text="{Binding LINEID}"></TextBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Width="50" VerticalAlignment="Center" Text="操作员"></TextBlock>
+                    <TextBox Width="100" Text="{Binding OPERTOR}"></TextBox>
+                </StackPanel>
+            </StackPanel>
+            <Button Width="60" Height="30" Content="退出" Background="Red" Canvas.Top="60" Canvas.Right="10" Command="{Binding FilmParamSaveCommand}"></Button>
+            <Button Width="60" Height="30" Content="确认" Canvas.Top="20" Canvas.Right="10" Command="{Binding FilmInputConfirmCommand}"></Button>
+        </Canvas>
+    </Grid>
+</metro:MetroWindow>

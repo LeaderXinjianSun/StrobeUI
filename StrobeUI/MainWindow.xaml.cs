@@ -28,6 +28,8 @@ namespace StrobeUI
             InitializeComponent();
             this.DataContext = new MainWindowViewModel();
             this.SetBinding(ShowSampleWindowProperty, "ShowSampleWindow");
+            this.SetBinding(ShowFilmScanWindowProperty, "ShowFilmScanWindow");
+            this.SetBinding(ShowFilmEmptyAlarmWindowProperty, "ShowFilmEmptyAlarmWindow");
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -63,5 +65,64 @@ namespace StrobeUI
             get { return (bool)GetValue(ShowSampleWindowProperty); }
             set { SetValue(ShowSampleWindowProperty, value); }
         }
+
+
+
+        public bool ShowFilmScanWindow
+        {
+            get { return (bool)GetValue(ShowFilmScanWindowProperty); }
+            set { SetValue(ShowFilmScanWindowProperty, value); }
+        }
+        public static FilmScanWindow FilmScanWindow = null;
+        // Using a DependencyProperty as the backing store for ShowFilmScanWindow.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ShowFilmScanWindowProperty =
+            DependencyProperty.Register("ShowFilmScanWindow", typeof(bool), typeof(MainWindow), new PropertyMetadata(
+
+                new PropertyChangedCallback((d, e) =>
+                {
+                    if (FilmScanWindow != null)
+                    {
+                        if (FilmScanWindow.HasShow)
+                            return;
+                    }
+                    var mMainWindow = d as MainWindow;
+                    FilmScanWindow = new FilmScanWindow();// { Owner = this }.Show();
+                    FilmScanWindow.Owner = Application.Current.MainWindow;
+                    FilmScanWindow.DataContext = mMainWindow.DataContext;
+                    FilmScanWindow.SetBinding(FilmScanWindow.QuitFilmScanWindowProperty, "QuitFilmScanWindow");
+                    FilmScanWindow.HasShow = true;
+                    FilmScanWindow.Show();
+                })
+                ));
+
+
+
+        public bool ShowFilmEmptyAlarmWindow
+        {
+            get { return (bool)GetValue(ShowFilmEmptyAlarmWindowProperty); }
+            set { SetValue(ShowFilmEmptyAlarmWindowProperty, value); }
+        }
+        public static FilmEmptyAlarmWindow FilmEmptyAlarmWindow = null;
+        // Using a DependencyProperty as the backing store for ShowFilmEmptyAlarmWindow.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty ShowFilmEmptyAlarmWindowProperty =
+            DependencyProperty.Register("ShowFilmEmptyAlarmWindow", typeof(bool), typeof(MainWindow), new PropertyMetadata(
+                new PropertyChangedCallback((d, e) =>
+                {
+                    if (FilmEmptyAlarmWindow != null)
+                    {
+                        if (FilmEmptyAlarmWindow.HasShow)
+                            return;
+                    }
+                    var mMainWindow = d as MainWindow;
+                    FilmEmptyAlarmWindow = new FilmEmptyAlarmWindow();// { Owner = this }.Show();
+                    FilmEmptyAlarmWindow.Owner = Application.Current.MainWindow;
+                    FilmEmptyAlarmWindow.DataContext = mMainWindow.DataContext;
+                    FilmEmptyAlarmWindow.SetBinding(FilmEmptyAlarmWindow.QuitFilmEmptyAlarmWindowProperty, "QuitFilmEmptyAlarmWindow");
+                    FilmEmptyAlarmWindow.HasShow = true;
+                    FilmEmptyAlarmWindow.Show();
+                })
+                ));
+
+
     }
 }

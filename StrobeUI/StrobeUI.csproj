@@ -149,12 +149,20 @@
     <Compile Include="Models\Csvfile.cs" />
     <Compile Include="Models\DateTimeUtility.cs" />
     <Compile Include="Models\Inifile.cs" />
+    <Compile Include="Models\Metro.cs" />
     <Compile Include="Models\Mysql.cs" />
     <Compile Include="Models\Oracle.cs" />
     <Compile Include="Models\ThingetPLC.cs" />
     <Compile Include="Models\UDP.cs" />
+    <Compile Include="ViewModels\FilmRuleItemViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\SampleNgItemViewModel.cs" />
+    <Compile Include="Views\FilmEmptyAlarmWindow.xaml.cs">
+      <DependentUpon>FilmEmptyAlarmWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\FilmScanWindow.xaml.cs">
+      <DependentUpon>FilmScanWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\SampleWindow.xaml.cs">
       <DependentUpon>SampleWindow.xaml</DependentUpon>
     </Compile>
@@ -170,6 +178,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\FilmEmptyAlarmWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\FilmScanWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\SampleWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -208,6 +224,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="D4X俯视图截图01.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Views\蝙蝠侠.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -52,7 +52,7 @@
         <Grid Grid.ColumnSpan="2" Visibility="{Binding SampleWindowPasswordPageVisibility,FallbackValue=Collapsed}" Background="White">
             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                 <TextBlock Text="请输入密码" Margin="0,10"></TextBlock>
-                <TextBox Margin="1" Width="200" Height="30" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Text="{Binding SampleWindowPassword}"></TextBox>
+                <TextBox Margin="0" TabIndex="0" Width="200" Height="30" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Text="{Binding SampleWindowPassword}"></TextBox>
                 <Button Width="60" Height="24" Content="确认" HorizontalAlignment="Right" Margin="5" Command="{Binding SampleWindowPasswordConfirmCommand}"></Button>
             </StackPanel>
         </Grid>
