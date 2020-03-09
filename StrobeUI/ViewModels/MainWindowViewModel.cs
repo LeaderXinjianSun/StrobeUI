@@ -1122,7 +1122,6 @@ namespace StrobeUI.ViewModels
                     {
                         byte[] buf = new byte[256];
                         byte[] snr = CPublic.CharToByte("FF FF FF FF FF");
-
                         CardStatus = await Task.Run<int>(() => { return reader.MF_Read(0, 0, 0, 1, ref snr[0], ref buf[0]); });
                         if (cardret != CardStatus)
                         {
@@ -1528,6 +1527,35 @@ namespace StrobeUI.ViewModels
             //byte[] aa = new byte[256];
             //aa[0] = 78; aa[1] = 98;
             //AddMessage(Encoding.UTF8.GetString(aa));
+
+
+            //reader.OpenComm(21, 9600);//打开串口
+
+            //while (true)
+            //{
+            //    System.Threading.Thread.Sleep(100);
+
+            //    byte[] buf = new byte[256];
+            //    byte[] snr = CPublic.CharToByte("FF FF FF FF FF");
+            //    int ret = reader.MF_Read(0, 0, 0, 1, ref snr[0], ref buf[0]);//读取卡信息
+
+            //    if (ret == 0)
+            //    {
+            //        var str = Encoding.UTF8.GetString(buf);//编码
+            //    }
+                
+            //}
+
+            
+
+
+
+
+
+
+
+
+
         }
         private void ManulSampleCommandExecute()
         {
