@@ -649,6 +649,50 @@ namespace StrobeUI.ViewModels
                 this.RaisePropertyChanged("QuitFilmEmptyAlarmWindow");
             }
         }
+        private string filmEmptyAlarmString;
+
+        public string FilmEmptyAlarmString
+        {
+            get { return filmEmptyAlarmString; }
+            set
+            {
+                filmEmptyAlarmString = value;
+                this.RaisePropertyChanged("FilmEmptyAlarmString");
+            }
+        }
+        private DateTime lastCleanTime;
+
+        public DateTime LastCleanTime
+        {
+            get { return lastCleanTime; }
+            set
+            {
+                lastCleanTime = value;
+                this.RaisePropertyChanged("LastCleanTime");
+            }
+        }
+        private DateTime nextCleanTime;
+
+        public DateTime NextCleanTime
+        {
+            get { return nextCleanTime; }
+            set
+            {
+                nextCleanTime = value;
+                this.RaisePropertyChanged("NextCleanTime");
+            }
+        }
+        private string spanCleanTime;
+
+        public string SpanCleanTime
+        {
+            get { return spanCleanTime; }
+            set
+            {
+                spanCleanTime = value;
+                this.RaisePropertyChanged("SpanCleanTime");
+            }
+        }
 
         #endregion
         #region 方法绑定
@@ -662,6 +706,7 @@ namespace StrobeUI.ViewModels
         public DelegateCommand FilmScanCommand { get; set; }
         public DelegateCommand FilmInputConfirmCommand { get; set; }
         public DelegateCommand FilmParamSaveCommand { get; set; }
+        public DelegateCommand CleanActionCommand { get; set; }
         #endregion
         #region 自定义变量
         string iniParameterPath = System.Environment.CurrentDirectory + "\\Parameter.ini";
@@ -695,7 +740,8 @@ namespace StrobeUI.ViewModels
             this.BigDataAlarmGetCommand = new DelegateCommand(new Action(this.BigDataAlarmGetCommandCommandExecute));
             this.FilmScanCommand = new DelegateCommand(new Action(this.FilmScanCommandCommandExecute));
             this.FilmInputConfirmCommand = new DelegateCommand(new Action(this.FilmInputConfirmCommandExecute));
-            this.FilmParamSaveCommand = new DelegateCommand(new Action(this.FilmParamSaveCommandExecute));            
+            this.FilmParamSaveCommand = new DelegateCommand(new Action(this.FilmParamSaveCommandExecute));
+            this.CleanActionCommand = new DelegateCommand(new Action(this.CleanActionCommandExecute));
             Run();
         }
         #endregion
@@ -705,7 +751,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200309";
+                this.UIName = "D5XUI 20200310";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -730,6 +776,9 @@ namespace StrobeUI.ViewModels
                 SamMode = Inifile.INIGetStringValue(iniParameterPath, "Sample", "SamMode", "2h");
                 ZPMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "ZPMID", "999");
                 FCTMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "FCTMID", "999");
+                #endregion
+                #region 清洁
+                LastCleanTime = Convert.ToDateTime(Inifile.INIGetStringValue(iniParameterPath, "Clean", "LastCleanTime", "2020/1/1 00:00:00"));
                 #endregion
                 #region 卷料
                 this.FilmRuleItems = new ObservableCollection<FilmRuleItemViewModel>();
@@ -1237,7 +1286,7 @@ namespace StrobeUI.ViewModels
 
                 NextSampleTime = SamStartDatetime;
                 var timeSpan = SamStartDatetime - DateTime.Now;
-                String fmt = (timeSpan < TimeSpan.Zero ? "\\-" : "") + "dd\\.hh\\:mm\\:ss";
+                String fmt = (timeSpan < TimeSpan.Zero ? "\\-dd\\.hh\\:mm\\:ss" : "hh\\:mm\\:ss");
                 SpanSampleTime = timeSpan.ToString(fmt) ;
                 if (M11000 != null && plcstate)
                 {
@@ -1299,6 +1348,12 @@ namespace StrobeUI.ViewModels
                 }
 
                 #endregion
+                #region 清洁
+                NextCleanTime = LastCleanTime.AddHours(2);
+                timeSpan = NextCleanTime - DateTime.Now;
+                fmt = (timeSpan < TimeSpan.Zero ? "\\-dd\\.hh\\:mm\\:ss" : "hh\\:mm\\:ss");
+                SpanCleanTime = timeSpan.ToString(fmt);
+                #endregion
                 #region 换班
                 if (LastBanci != GetBanci())
                 {
@@ -1339,6 +1394,10 @@ namespace StrobeUI.ViewModels
                             return ex.Message;
                         }
                     });
+
+                    QuitFilmEmptyAlarmWindow = !QuitFilmEmptyAlarmWindow;
+                    LastCleanTime = DateTime.Now;
+                    Inifile.INIWriteValue(iniParameterPath, "Clean", "LastCleanTime", LastCleanTime.ToString());
 
                     AddMessage(LastBanci + " 换班数据清零。数据库更新" + result);
                     Xinjie.SetM(11099, true);//通知PLC换班，计数清空
@@ -1431,12 +1490,15 @@ namespace StrobeUI.ViewModels
                     filmalarmcount = 0;
                     if (CurrentFilmCount < 20)
                     {
+                        FilmEmptyAlarmString = "卷料空报警，请更换卷料。";
                         ShowFilmEmptyAlarmWindow = !ShowFilmEmptyAlarmWindow;
                         metro.ChangeAccent("Red");
                     }
-                    else
+                    if (DateTime.Now > NextCleanTime)
                     {
-                        QuitFilmEmptyAlarmWindow = !QuitFilmEmptyAlarmWindow;
+                        FilmEmptyAlarmString = "清洁时间到，请清洁。";
+                        ShowFilmEmptyAlarmWindow = !ShowFilmEmptyAlarmWindow;
+                        metro.ChangeAccent("Red");
                     }
                 }
                 #endregion
@@ -2121,6 +2183,13 @@ namespace StrobeUI.ViewModels
             AddMessage("卷料配置参数保存完成");
             FilmProcessBarIsIndeterminate = false; ;
             QuitFilmScanWindow = !QuitFilmScanWindow;
+        }
+        private void CleanActionCommandExecute()
+        {
+            QuitFilmEmptyAlarmWindow = !QuitFilmEmptyAlarmWindow;
+            metro.ChangeAccent("Blue");
+            LastCleanTime = DateTime.Now;
+            Inifile.INIWriteValue(iniParameterPath, "Clean", "LastCleanTime", LastCleanTime.ToString());
         }
         #endregion
     }

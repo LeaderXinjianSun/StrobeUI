@@ -11,6 +11,6 @@
         <Grid.Background>
             <ImageBrush ImageSource="蝙蝠侠.jpg"></ImageBrush>
         </Grid.Background>
-        <TextBlock Text="卷料报警，请更换胶料。" FontWeight="Bold" Foreground="Red" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60"></TextBlock>
+        <TextBlock Text="{Binding FilmEmptyAlarmString}" FontWeight="Bold" Foreground="Red" VerticalAlignment="Center" HorizontalAlignment="Center" FontSize="60"></TextBlock>
     </Grid>
 </metro:MetroWindow>
