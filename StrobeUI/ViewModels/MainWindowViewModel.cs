@@ -1405,7 +1405,7 @@ namespace StrobeUI.ViewModels
                     AddMessage(LastBanci + " 换班数据清零。数据库更新" + result);
                     AlarmCount = 0;
                     Xinjie.SetM(11099, true);//通知PLC换班，计数清空
-                    Xinjie.SetM(11155, false);
+                    Xinjie.SetM(11155, true);
                 }
                 #endregion
                 #region 刷卡
@@ -1634,17 +1634,18 @@ namespace StrobeUI.ViewModels
                 {
                     TimeSpan ts = DateTime.Now - GetBanStart();
                     //妥善率
-                    double ProperlyRate = (ts.TotalMilliseconds - (double)LampYellowFlickerElapse / 60 - (double)LampRedElapse / 60) / ts.TotalMilliseconds * 100;
+                    double ProperlyRate = (ts.TotalMinutes - (double)LampYellowFlickerElapse  - (double)LampRedElapse ) / ts.TotalMinutes * 100;
                     //报警率
                     double AlarmRate = AlarmCount / HD200[6] * 100;
                     //达成率
-                    double YieldRate = HD200[3] / ((ts.TotalMilliseconds - (double)LampGreenFlickerElapse / 60 - (double)LampYellowElapse / 60) * (60 / HD200[7])) * 100;
+                    double YieldRate = HD200[3] / ((ts.TotalMinutes - (double)LampGreenFlickerElapse - (double)LampYellowElapse) * (60 / HD200[7]) * 10) * 100;
                     //直通率
                     double PassRate = HD200[3] / HD200[6] * 100;
 
                     await Task.Run(() => { Xinjie.WriteW(410, (PassRate * 10).ToString("F0")); });//往D410写直通率，保留1位小数
                     await Task.Run(() => { Xinjie.WriteW(411, (AlarmRate * 10).ToString("F0")); });//往D410写报警率，保留1位小数
                     await Task.Run(() => { Xinjie.WriteW(412, (YieldRate * 10).ToString("F0")); });//往D411写达成率，保留1位小数
+                    await Task.Run(() => { Xinjie.WriteW(413, (ProperlyRate * 10).ToString("F0")); });//往D413写妥善率，保留1位小数
 
                     await Task.Run(() => { Xinjie.WriteW(401, AlarmCount.ToString()); });//往D401写报警次数，保留1位小数
                 }
