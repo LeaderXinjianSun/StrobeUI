@@ -145,7 +145,7 @@
                         <metro:MetroProgressBar  Margin="1,4,20,4" Value="{Binding CurrentFilmCount}" Maximum="{Binding MaxFilmCount}" IsIndeterminate ="{Binding FilmProcessBarIsIndeterminate}"  Height="22"></metro:MetroProgressBar>
                         <StackPanel Orientation="Horizontal" Margin="1">
                             <Button Content="扫卷料码" Width="60" Height="30" Command="{Binding FilmScanCommand}"></Button>
-                            <Button Visibility="Collapsed" Height="30" Width="60" Content="功能" Margin="5" Command="{Binding FuncTestCommand}"></Button>
+                            <Button Visibility="Visible" Height="30" Width="60" Content="功能" Margin="5" Command="{Binding FuncTestCommand}"></Button>
                         </StackPanel>
                     </StackPanel>
 

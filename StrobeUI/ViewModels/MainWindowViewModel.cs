@@ -714,7 +714,7 @@ namespace StrobeUI.ViewModels
         ThingetPLC Xinjie = new ThingetPLC();
         UDPClient udp1 = new UDPClient();
         UDPClient udp2 = new UDPClient();
-        bool[] M11000; bool plcstate = false;
+        bool[] M11000; double[] HD200; bool plcstate = false;
         List<string> SampleBarcode = new List<string>();
         bool sampleTestStart = false, isInSampleMode = false, sampleTestAbort = false, sampleTestFinished = false;
         List<AlarmData> AlarmList = new List<AlarmData>();
@@ -726,6 +726,7 @@ namespace StrobeUI.ViewModels
         Stopwatch LampGreenSw = new Stopwatch();
         CReader reader = new CReader(); int CardStatus = 1;
         BingLibrary.hjb.Metro.Metro metro = new BingLibrary.hjb.Metro.Metro();
+        int AlarmCount = 0;
         #endregion
         #region 构造函数
         public MainWindowViewModel()
@@ -751,7 +752,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200310";
+                this.UIName = "D5XUI 20200312";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -884,7 +885,7 @@ namespace StrobeUI.ViewModels
             {
                 AddMessage(ex.Message);
             }
-           
+
         }
         void Run()
         {
@@ -904,13 +905,15 @@ namespace StrobeUI.ViewModels
             {
                 await Task.Delay(10);
                 sw.Restart();
-                plcstate = await Task<bool>.Run(()=> { return Xinjie.ReadSM(0); }); 
+                plcstate = await Task<bool>.Run(() => { return Xinjie.ReadSM(0); });
                 PLCStatus = plcstate ? "green" : "red";
                 if (plcstate)
                 {
                     M11000 = await Task<bool[]>.Run(() => { return Xinjie.ReadMultiMCoil(11000); }); //读160个M
+                    HD200 = await Task<double[]>.Run(() => { return Xinjie.readMultiHD(200); });
                     bool[] M100 = await Task<bool[]>.Run(() => { return Xinjie.ReadMultiMCoil(100); }); //读160个M
-                    await Task.Run(()=> { Xinjie.WriteW(1201, rd.Next(0, 99).ToString()); });//往D1201写一个随机数
+
+                    await Task.Run(() => { Xinjie.WriteW(1201, rd.Next(0, 99).ToString()); });//往D1201写一个随机数
                     if (first)
                     {
                         first = false;
@@ -981,36 +984,36 @@ namespace StrobeUI.ViewModels
                                     CurrentFilmCount -= 1;
                                 }
                                 Inifile.INIWriteValue(iniParameterPath, "FET", "CurrentFilmCount", CurrentFilmCount.ToString());
-                                try
-                                {
-                                    SXJLibrary.Oracle oraDB = new SXJLibrary.Oracle("qddb04.eavarytech.com", "mesdb04", "ictdata", "ictdata*168");
-                                    if (oraDB.isConnect())
-                                    {
-                                        if (LingminduBarcode1 != "null")
-                                        {
-                                            string rst = LingminduBarcode1Background == "Red" ? "PASS" : "FAIL";
-                                            string stm = string.Format("INSERT INTO TED_Leak_C_DATA (MACID,PARTNUM,REVISION,WORKNO,LINEID,OPERTOR,BARCODE,TRESULT,TESTDATE,TESTTIME,SDATE,STIME,FPATH) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}');",
-                                                MACID, PM, REVISION, WORKNO, LINEID, OPERTOR, LingminduBarcode1, rst, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), FilmText);
-                                            oraDB.executeNonQuery(stm);
-                                            oraDB.executeNonQuery("COMMIT;");
-                                        }
-                                        if (LingminduBarcode2 != "null")
-                                        {
-                                            string rst = LingminduBarcode2Background == "Red" ? "PASS" : "FAIL";
-                                            string stm = string.Format("INSERT INTO TED_Leak_C_DATA (MACID,PARTNUM,REVISION,WORKNO,LINEID,OPERTOR,BARCODE,TRESULT,TESTDATE,TESTTIME,SDATE,STIME,FPATH) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}');",
-                                                MACID, PM, REVISION, WORKNO, LINEID, OPERTOR, LingminduBarcode2, rst, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), FilmText);
-                                            oraDB.executeNonQuery(stm);
-                                            oraDB.executeNonQuery("COMMIT;");
-                                        }
-                                    }
-                                    oraDB.disconnect();
-                                }
-                                catch (Exception ex)
-                                {
-                                    AddMessage("插入卷料信息到数据库出错");
-                                    AddMessage(ex.Message);
-                                }
-                                
+                                //try
+                                //{
+                                //    SXJLibrary.Oracle oraDB = new SXJLibrary.Oracle("qddb04.eavarytech.com", "mesdb04", "ictdata", "ictdata*168");
+                                //    if (oraDB.isConnect())
+                                //    {
+                                //        if (LingminduBarcode1 != "null")
+                                //        {
+                                //            string rst = LingminduBarcode1Background == "Red" ? "PASS" : "FAIL";
+                                //            string stm = string.Format("INSERT INTO TED_Leak_C_DATA (MACID,PARTNUM,REVISION,WORKNO,LINEID,OPERTOR,BARCODE,TRESULT,TESTDATE,TESTTIME,SDATE,STIME,FPATH) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}');",
+                                //                MACID, PM, REVISION, WORKNO, LINEID, OPERTOR, LingminduBarcode1, rst, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), FilmText);
+                                //            oraDB.executeNonQuery(stm);
+                                //            oraDB.executeNonQuery("COMMIT;");
+                                //        }
+                                //        if (LingminduBarcode2 != "null")
+                                //        {
+                                //            string rst = LingminduBarcode2Background == "Red" ? "PASS" : "FAIL";
+                                //            string stm = string.Format("INSERT INTO TED_Leak_C_DATA (MACID,PARTNUM,REVISION,WORKNO,LINEID,OPERTOR,BARCODE,TRESULT,TESTDATE,TESTTIME,SDATE,STIME,FPATH) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}');",
+                                //                MACID, PM, REVISION, WORKNO, LINEID, OPERTOR, LingminduBarcode2, rst, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), FilmText);
+                                //            oraDB.executeNonQuery(stm);
+                                //            oraDB.executeNonQuery("COMMIT;");
+                                //        }
+                                //    }
+                                //    oraDB.disconnect();
+                                //}
+                                //catch (Exception ex)
+                                //{
+                                //    AddMessage("插入卷料信息到数据库出错");
+                                //    AddMessage(ex.Message);
+                                //}
+
                             }
                         }
                     }
@@ -1137,7 +1140,7 @@ namespace StrobeUI.ViewModels
                     await Task.Delay(1000);
                     Xinjie.ModbusDisConnect();
                     Xinjie.ModbusInit(COM, 19200, System.IO.Ports.Parity.Even, 8, System.IO.Ports.StopBits.One);
-                    await Task.Run(()=> { Xinjie.ModbusConnect(); }); 
+                    await Task.Run(() => { Xinjie.ModbusConnect(); });
                 }
                 PLCCycle = sw.ElapsedMilliseconds;
             }
@@ -1287,7 +1290,7 @@ namespace StrobeUI.ViewModels
                 NextSampleTime = SamStartDatetime;
                 var timeSpan = SamStartDatetime - DateTime.Now;
                 String fmt = (timeSpan < TimeSpan.Zero ? "\\-dd\\.hh\\:mm\\:ss" : "hh\\:mm\\:ss");
-                SpanSampleTime = timeSpan.ToString(fmt) ;
+                SpanSampleTime = timeSpan.ToString(fmt);
                 if (M11000 != null && plcstate)
                 {
                     isInSampleMode = M11000[110];
@@ -1334,7 +1337,7 @@ namespace StrobeUI.ViewModels
                         {
                             AddMessage("样本测试成功");
                             SampleBarcode.Clear();
-                            LastSampleTime = DateTime.Now; 
+                            LastSampleTime = DateTime.Now;
                             Inifile.INIWriteValue(iniParameterPath, "Sample", "LastSample", LastSampleTime.ToString());
                             Xinjie.SetM(11116, false);
                         }
@@ -1400,6 +1403,7 @@ namespace StrobeUI.ViewModels
                     Inifile.INIWriteValue(iniParameterPath, "Clean", "LastCleanTime", LastCleanTime.ToString());
 
                     AddMessage(LastBanci + " 换班数据清零。数据库更新" + result);
+                    AlarmCount = 0;
                     Xinjie.SetM(11099, true);//通知PLC换班，计数清空
                     Xinjie.SetM(11155, false);
                 }
@@ -1419,10 +1423,12 @@ namespace StrobeUI.ViewModels
                                 if (IntPtr.Zero == reader.GetHComm())
                                 {
                                     string COM = Inifile.INIGetStringValue(iniParameterPath, "读卡器", "COM", "COM19").Replace("COM", "");
+
                                     reader.OpenComm(int.Parse(COM), 9600);
                                 }
+                                string MODE = Inifile.INIGetStringValue(iniParameterPath, "读卡器", "MODE", "3");
                                 //刷卡；若刷到卡返回0，没刷到回1。
-                                CardStatus =  reader.MF_Read(0, 0, 0, 1, ref snr[0], ref buf[0]);
+                                CardStatus = reader.MF_Read(0, byte.Parse(MODE), 0, 1, ref snr[0], ref buf[0]);
                                 //采用上升沿信号，防止卡放在读卡机上，重复执行查询动作。寄卡放一次，才查询一次，要再查询，需要重新刷卡。
                                 if (cardret != CardStatus)
                                 {
@@ -1507,6 +1513,7 @@ namespace StrobeUI.ViewModels
         async void BigDataRun()
         {
             int _LampColor = LampColor;
+            int count1 = 0;
             LampGreenSw.Start();
             while (true)
             {
@@ -1551,7 +1558,7 @@ namespace StrobeUI.ViewModels
 
                                 AlarmAction(i);//等待报警结束
                             }
-                            
+
                         }
                     }
 
@@ -1583,14 +1590,16 @@ namespace StrobeUI.ViewModels
                     default:
                         break;
                 }
-                if (_LampColor != LampColor)
+                count1++;
+                if (_LampColor != LampColor || count1 > 60)
                 {
-                    _LampColor = LampColor;
-                    if (LampColor == 1)
+
+                    if (LampColor == 1 && _LampColor != LampColor)
                     {
                         LampGreenSw.Restart();
                     }
-
+                    _LampColor = LampColor;
+                    count1 = 0;
                     string result = await Task<string>.Run(() =>
                     {
                         try
@@ -1618,6 +1627,26 @@ namespace StrobeUI.ViewModels
                 if (LampColor != 1)
                 {
                     LampGreenSw.Reset();
+                }
+                #endregion
+                #region 机台指标
+                if (HD200 != null && plcstate)
+                {
+                    TimeSpan ts = DateTime.Now - GetBanStart();
+                    //妥善率
+                    double ProperlyRate = (ts.TotalMilliseconds - (double)LampYellowFlickerElapse / 60 - (double)LampRedElapse / 60) / ts.TotalMilliseconds * 100;
+                    //报警率
+                    double AlarmRate = AlarmCount / HD200[6] * 100;
+                    //达成率
+                    double YieldRate = HD200[3] / ((ts.TotalMilliseconds - (double)LampGreenFlickerElapse / 60 - (double)LampYellowElapse / 60) * (60 / HD200[7])) * 100;
+                    //直通率
+                    double PassRate = HD200[3] / HD200[6] * 100;
+
+                    await Task.Run(() => { Xinjie.WriteW(410, (PassRate * 10).ToString("F0")); });//往D410写直通率，保留1位小数
+                    await Task.Run(() => { Xinjie.WriteW(411, (AlarmRate * 10).ToString("F0")); });//往D410写报警率，保留1位小数
+                    await Task.Run(() => { Xinjie.WriteW(412, (YieldRate * 10).ToString("F0")); });//往D411写达成率，保留1位小数
+
+                    await Task.Run(() => { Xinjie.WriteW(401, AlarmCount.ToString()); });//往D401写报警次数，保留1位小数
                 }
                 #endregion
             }
@@ -1862,6 +1891,25 @@ namespace StrobeUI.ViewModels
             }
             return rs;
         }
+        private DateTime GetBanStart()
+        {
+            //"2020/1/1 00:00:00"
+            if (DateTime.Now.Hour >= 8 && DateTime.Now.Hour < 20)
+            {
+                return Convert.ToDateTime(DateTime.Now.ToString("yyyy/MM/dd ") + "08:00:00");
+            }
+            else
+            {
+                if (DateTime.Now.Hour >= 0 && DateTime.Now.Hour < 8)
+                {
+                    return Convert.ToDateTime(DateTime.Now.AddDays(-1).ToString("yyyy/MM/dd ") + "20:00:00");
+                }
+                else
+                {
+                    return Convert.ToDateTime(DateTime.Now.ToString("yyyy/MM/dd ") + "20:00:00");
+                }
+            }
+        }
         void AddMessage(string str)
         {
             string[] s = MessageStr.Split('\n');
@@ -1888,6 +1936,7 @@ namespace StrobeUI.ViewModels
             //Inifile.INIWriteValue(iniParameterPath, "灵敏度", "LocalPort", "8002");
             //Inifile.INIWriteValue(iniParameterPath, "灵敏度", "TargetPort", "8020");
             //Inifile.INIWriteValue(iniParameterPath, "读卡器", "COM", "COM21");
+            //Inifile.INIWriteValue(iniParameterPath, "读卡器", "MODE", "3");
             //byte[] aa = new byte[256];
             //aa[0] = 78; aa[1] = 98;
             //AddMessage(Encoding.UTF8.GetString(aa));
@@ -1907,11 +1956,11 @@ namespace StrobeUI.ViewModels
             //    {
             //        var str = Encoding.UTF8.GetString(buf);//编码
             //    }
-                
+
             //}
 
-            
-
+            //var daa = Convert.ToDateTime((DateTime.Now.AddDays(-1).ToString("yyyy/MM/dd ") + "08:00:00"));
+            //AddMessage(DateTime.Now.AddDays(-1).ToString("yyyy/MM/dd ") + "08:00:00");
 
 
 
@@ -1939,7 +1988,7 @@ namespace StrobeUI.ViewModels
             ShowSampleWindow = !ShowSampleWindow;
         }
         private void SampleWindowPasswordConfirmCommandExecute()
-        {            
+        {
             if (SampleWindowPassword == GetPassWord())
             {
                 SampleWindowPasswordPageVisibility = "Collapsed";
@@ -1954,7 +2003,7 @@ namespace StrobeUI.ViewModels
         {
             for (int i = 0; i < 10; i++)
             {
-                Inifile.INIWriteValue(iniParameterPath, "Sample", "NGItem" + (i+ 1).ToString(), this.NGItems[i].NgItem);
+                Inifile.INIWriteValue(iniParameterPath, "Sample", "NGItem" + (i + 1).ToString(), this.NGItems[i].NgItem);
                 Inifile.INIWriteValue(iniParameterPath, "Sample", "NGItemClassify" + (i + 1).ToString(), this.NGItems[i].NGItemClassify);
             }
             Inifile.INIWriteValue(iniParameterPath, "Sample", "IsSampleCheck", this.IsSampleCheck.ToString());
@@ -1988,14 +2037,15 @@ namespace StrobeUI.ViewModels
         {
             AlarmButtonIsEnabled = false;
 
-            var rst = await Task<string>.Run(()=> {
+            var rst = await Task<string>.Run(() =>
+            {
                 try
                 {
                     if (!Directory.Exists(Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd"))))
                     {
                         Directory.CreateDirectory(Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd")));
                     }
-                    string path = Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("yyyyMMddHHmmss")+ "AlarmTotal.csv");
+                    string path = Path.Combine(System.Environment.CurrentDirectory, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("yyyyMMddHHmmss") + "AlarmTotal.csv");
 
 
                     Mysql mysql = new Mysql();
@@ -2007,6 +2057,7 @@ namespace StrobeUI.ViewModels
                         DataTable dt = ds.Tables["table0"];
                         if (dt.Rows.Count > 0)
                         {
+                            AlarmCount = dt.Rows.Count;
                             string strHead = DateTime.Now.ToString("yyyyMMddHHmmss") + "AlarmTotal";
                             string strColumns = "";
                             for (int i = 0; i < dt.Columns.Count; i++)
@@ -2028,7 +2079,7 @@ namespace StrobeUI.ViewModels
 
 
 
-                    
+
                 }
                 catch (Exception ex)
                 {
@@ -2046,14 +2097,14 @@ namespace StrobeUI.ViewModels
             FilmTextInput = "";
             FilmProcessBarIsIndeterminate = true;
             ShowFilmScanWindow = !ShowFilmScanWindow;
-    
+
         }
         private void FilmInputConfirmCommandExecute()
         {
             //Inifile.INIWriteValue(iniParameterPath, "FET", "FilmText", "WQWERTYUIOQWERTYUIOASDFGHJKLZXCVBNM");
             if (FilmTextInput != "")
             {
-                string[] strs = FilmTextInput.Split(new string[] { "/"," "}, StringSplitOptions.RemoveEmptyEntries);
+                string[] strs = FilmTextInput.Split(new string[] { "/", " " }, StringSplitOptions.RemoveEmptyEntries);
                 if (strs.Length == 4)
                 {
                     int i = 0;
@@ -2063,7 +2114,7 @@ namespace StrobeUI.ViewModels
                         {
                             break;
                         }
-                        
+
                     }
                     if (i < 3)
                     {
@@ -2164,7 +2215,7 @@ namespace StrobeUI.ViewModels
             {
                 AddMessage("请输入卷料信息");
             }
-            
+
         }
         private void FilmParamSaveCommandExecute()
         {
