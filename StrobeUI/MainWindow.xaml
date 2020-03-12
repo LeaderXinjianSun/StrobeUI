@@ -90,6 +90,7 @@
                     <StackPanel Orientation="Horizontal" Margin="1">
                         <Button Content="{Binding BigDataPeramEdit}" Width="60" Height="30" HorizontalAlignment="Right" Margin="5" Command="{Binding BigDataPeramEditCommand}"></Button>
                         <Button Content="Alarm" Width="60" Height="30" IsEnabled="{Binding AlarmButtonIsEnabled}" Command="{Binding BigDataAlarmGetCommand}"></Button>
+                        <Button Visibility="Collapsed" Height="30" Width="60" Content="功能" Margin="5" Command="{Binding FuncTestCommand}"></Button>
                     </StackPanel>
                     
                 </StackPanel>
@@ -127,30 +128,6 @@
                         <Button Height="30" Width="60" Content="清洁" Margin="10,0,0,0" Background="OliveDrab" Foreground="White" Command="{Binding CleanActionCommand}"></Button>
                     </StackPanel>
                 </StackPanel>
-            </GroupBox>
-            <GroupBox Grid.Row="2" Header="卷料">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition></RowDefinition>
-                        <RowDefinition></RowDefinition>
-                    </Grid.RowDefinitions>
-                    <TextBlock TextWrapping = "Wrap" Text="{Binding FilmText}"></TextBlock>
-                    <StackPanel Grid.Row="1">
-                        <StackPanel Orientation="Horizontal" Margin="1">
-                            <TextBlock Text="卷料余量: "></TextBlock>
-                            <TextBlock Text="{Binding CurrentFilmCount}"></TextBlock>
-                            <TextBlock Text="/"></TextBlock>
-                            <TextBlock Text="{Binding MaxFilmCount}"></TextBlock>
-                        </StackPanel>
-                        <metro:MetroProgressBar  Margin="1,4,20,4" Value="{Binding CurrentFilmCount}" Maximum="{Binding MaxFilmCount}" IsIndeterminate ="{Binding FilmProcessBarIsIndeterminate}"  Height="22"></metro:MetroProgressBar>
-                        <StackPanel Orientation="Horizontal" Margin="1">
-                            <Button Content="扫卷料码" Width="60" Height="30" Command="{Binding FilmScanCommand}"></Button>
-                            <Button Visibility="Collapsed" Height="30" Width="60" Content="功能" Margin="5" Command="{Binding FuncTestCommand}"></Button>
-                        </StackPanel>
-                    </StackPanel>
-
-                </Grid>
-                
             </GroupBox>
         </Grid>
         <StatusBar Grid.Row="2" Grid.ColumnSpan="2">

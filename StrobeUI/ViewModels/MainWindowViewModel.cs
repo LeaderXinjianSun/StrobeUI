@@ -495,138 +495,8 @@ namespace StrobeUI.ViewModels
                 this.RaisePropertyChanged("AlarmButtonIsEnabled");
             }
         }
-        private string filmText;
-        private string filmTextInput;
-
-        public string FilmTextInput
-        {
-            get { return filmTextInput; }
-            set
-            {
-                filmTextInput = value;
-                this.RaisePropertyChanged("FilmTextInput");
-            }
-        }
-
-        public string FilmText
-        {
-            get { return filmText; }
-            set
-            {
-                filmText = value;
-                this.RaisePropertyChanged("FilmText");
-            }
-        }
-        private bool showFilmScanWindow;
-
-        public bool ShowFilmScanWindow
-        {
-            get { return showFilmScanWindow; }
-            set
-            {
-                showFilmScanWindow = value;
-                this.RaisePropertyChanged("ShowFilmScanWindow");
-            }
-        }
-        private ObservableCollection<FilmRuleItemViewModel> filmRuleItems;
-
-        public ObservableCollection<FilmRuleItemViewModel> FilmRuleItems
-        {
-            get { return filmRuleItems; }
-            set
-            {
-                filmRuleItems = value;
-                this.RaisePropertyChanged("FilmRuleItems");
-            }
-        }
-        private bool quitFilmScanWindow;
-
-        public bool QuitFilmScanWindow
-        {
-            get { return quitFilmScanWindow; }
-            set
-            {
-                quitFilmScanWindow = value;
-                this.RaisePropertyChanged("QuitFilmScanWindow");
-            }
-        }
-        private int currentFilmCount;
-
-        public int CurrentFilmCount
-        {
-            get { return currentFilmCount; }
-            set
-            {
-                currentFilmCount = value;
-                this.RaisePropertyChanged("CurrentFilmCount");
-            }
-        }
-        private int maxFilmCount;
-
-        public int MaxFilmCount
-        {
-            get { return maxFilmCount; }
-            set
-            {
-                maxFilmCount = value;
-                this.RaisePropertyChanged("MaxFilmCount");
-            }
-        }
-        private bool filmProcessBarIsIndeterminate;
-
-        public bool FilmProcessBarIsIndeterminate
-        {
-            get { return filmProcessBarIsIndeterminate; }
-            set
-            {
-                filmProcessBarIsIndeterminate = value;
-                this.RaisePropertyChanged("FilmProcessBarIsIndeterminate");
-            }
-        }
-        private string rEVISION;
-
-        public string REVISION
-        {
-            get { return rEVISION; }
-            set
-            {
-                rEVISION = value;
-                this.RaisePropertyChanged("REVISION");
-            }
-        }
-        private string wORKNO;
-
-        public string WORKNO
-        {
-            get { return wORKNO; }
-            set
-            {
-                wORKNO = value;
-                this.RaisePropertyChanged("WORKNO");
-            }
-        }
-        private string lINEID;
-
-        public string LINEID
-        {
-            get { return lINEID; }
-            set
-            {
-                lINEID = value;
-                this.RaisePropertyChanged("LINEID");
-            }
-        }
-        private string oPERTOR;
-
-        public string OPERTOR
-        {
-            get { return oPERTOR; }
-            set
-            {
-                oPERTOR = value;
-                this.RaisePropertyChanged("OPERTOR");
-            }
-        }
+                                                    
+       
         private bool showFilmEmptyAlarmWindow;
 
         public bool ShowFilmEmptyAlarmWindow
@@ -703,9 +573,6 @@ namespace StrobeUI.ViewModels
         public DelegateCommand SampleSaveCommand { get; set; }
         public DelegateCommand BigDataPeramEditCommand { get; set; }
         public DelegateCommand BigDataAlarmGetCommand { get; set; }
-        public DelegateCommand FilmScanCommand { get; set; }
-        public DelegateCommand FilmInputConfirmCommand { get; set; }
-        public DelegateCommand FilmParamSaveCommand { get; set; }
         public DelegateCommand CleanActionCommand { get; set; }
         #endregion
         #region 自定义变量
@@ -739,9 +606,6 @@ namespace StrobeUI.ViewModels
             this.SampleSaveCommand = new DelegateCommand(new Action(this.SampleSaveCommandExecute));
             this.BigDataPeramEditCommand = new DelegateCommand(new Action(this.BigDataPeramEditCommandExecute));
             this.BigDataAlarmGetCommand = new DelegateCommand(new Action(this.BigDataAlarmGetCommandCommandExecute));
-            this.FilmScanCommand = new DelegateCommand(new Action(this.FilmScanCommandCommandExecute));
-            this.FilmInputConfirmCommand = new DelegateCommand(new Action(this.FilmInputConfirmCommandExecute));
-            this.FilmParamSaveCommand = new DelegateCommand(new Action(this.FilmParamSaveCommandExecute));
             this.CleanActionCommand = new DelegateCommand(new Action(this.CleanActionCommandExecute));
             Run();
         }
@@ -757,8 +621,7 @@ namespace StrobeUI.ViewModels
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
                 this.AlarmButtonIsEnabled = true;
-                this.SampleGridVisibility = "Collapsed";
-                FilmProcessBarIsIndeterminate = false;
+                this.SampleGridVisibility = "Collapsed";                
                 #endregion
                 #region 样本
                 LastSampleTime = Convert.ToDateTime(Inifile.INIGetStringValue(iniParameterPath, "Sample", "LastSample", "2020/1/1 00:00:00"));
@@ -780,28 +643,6 @@ namespace StrobeUI.ViewModels
                 #endregion
                 #region 清洁
                 LastCleanTime = Convert.ToDateTime(Inifile.INIGetStringValue(iniParameterPath, "Clean", "LastCleanTime", "2020/1/1 00:00:00"));
-                #endregion
-                #region 卷料
-                this.FilmRuleItems = new ObservableCollection<FilmRuleItemViewModel>();
-                for (int i = 0; i < 3; i++)
-                {
-                    FilmRuleItems.Add(new FilmRuleItemViewModel
-                    {
-                        Id = i + 1,
-                        CodeRule1 = Inifile.INIGetStringValue(iniParameterPath, "FET", "CodeRule1_" + (i + 1).ToString(), "***********"),
-                        CodeRule2 = Inifile.INIGetStringValue(iniParameterPath, "FET", "CodeRule2_" + (i + 1).ToString(), "***********"),
-                        CodeRule3 = Inifile.INIGetStringValue(iniParameterPath, "FET", "CodeRule3_" + (i + 1).ToString(), "***********"),
-                        CodeRule4 = Inifile.INIGetStringValue(iniParameterPath, "FET", "CodeRule4_" + (i + 1).ToString(), "***********"),
-                        IsChecked = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "FET", "IsChecked" + (i + 1).ToString(), "False"))
-                    });
-                }
-                FilmText = Inifile.INIGetStringValue(iniParameterPath, "FET", "FilmText", "Null");
-                CurrentFilmCount = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "FET", "CurrentFilmCount", "0"));
-                MaxFilmCount = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "FET", "MaxFilmCount", "5000"));
-                REVISION = Inifile.INIGetStringValue(iniParameterPath, "FET", "REVISION", "NA");
-                WORKNO = Inifile.INIGetStringValue(iniParameterPath, "FET", "WORKNO", "NA");
-                LINEID = Inifile.INIGetStringValue(iniParameterPath, "FET", "LINEID", "NA");
-                OPERTOR = Inifile.INIGetStringValue(iniParameterPath, "FET", "OPERTOR", "NA");
                 #endregion
                 #region UDP网络
                 string ip;
@@ -837,7 +678,6 @@ namespace StrobeUI.ViewModels
                 LampYellowElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampYellowElapse", "0"));
                 LampYellowFlickerElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampYellowFlickerElapse", "0"));
                 LampRedElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampRedElapse", "0"));
-                FilmText = Inifile.INIGetStringValue(iniParameterPath, "FET", "FilmText", "0");
                 #endregion
                 #region 报警文档
                 try
@@ -972,49 +812,7 @@ namespace StrobeUI.ViewModels
                             await udp2.SendAsync(sends);
                             AddMessage("向灵敏度发送 " + sends);
                             RunLog("向灵敏度发送 " + sends);
-                            //上传卷料信息
-                            if (LingminduBarcode1 != "null" || LingminduBarcode2 != "null")
-                            {
-                                if (LingminduBarcode1 != "null" && LingminduBarcode2 != "null")
-                                {
-                                    CurrentFilmCount -= 2;
-                                }
-                                else
-                                {
-                                    CurrentFilmCount -= 1;
-                                }
-                                Inifile.INIWriteValue(iniParameterPath, "FET", "CurrentFilmCount", CurrentFilmCount.ToString());
-                                //try
-                                //{
-                                //    SXJLibrary.Oracle oraDB = new SXJLibrary.Oracle("qddb04.eavarytech.com", "mesdb04", "ictdata", "ictdata*168");
-                                //    if (oraDB.isConnect())
-                                //    {
-                                //        if (LingminduBarcode1 != "null")
-                                //        {
-                                //            string rst = LingminduBarcode1Background == "Red" ? "PASS" : "FAIL";
-                                //            string stm = string.Format("INSERT INTO TED_Leak_C_DATA (MACID,PARTNUM,REVISION,WORKNO,LINEID,OPERTOR,BARCODE,TRESULT,TESTDATE,TESTTIME,SDATE,STIME,FPATH) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}');",
-                                //                MACID, PM, REVISION, WORKNO, LINEID, OPERTOR, LingminduBarcode1, rst, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), FilmText);
-                                //            oraDB.executeNonQuery(stm);
-                                //            oraDB.executeNonQuery("COMMIT;");
-                                //        }
-                                //        if (LingminduBarcode2 != "null")
-                                //        {
-                                //            string rst = LingminduBarcode2Background == "Red" ? "PASS" : "FAIL";
-                                //            string stm = string.Format("INSERT INTO TED_Leak_C_DATA (MACID,PARTNUM,REVISION,WORKNO,LINEID,OPERTOR,BARCODE,TRESULT,TESTDATE,TESTTIME,SDATE,STIME,FPATH) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}');",
-                                //                MACID, PM, REVISION, WORKNO, LINEID, OPERTOR, LingminduBarcode2, rst, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("hhmmss"), FilmText);
-                                //            oraDB.executeNonQuery(stm);
-                                //            oraDB.executeNonQuery("COMMIT;");
-                                //        }
-                                //    }
-                                //    oraDB.disconnect();
-                                //}
-                                //catch (Exception ex)
-                                //{
-                                //    AddMessage("插入卷料信息到数据库出错");
-                                //    AddMessage(ex.Message);
-                                //}
-
-                            }
+                            
                         }
                     }
                     if (M11142 != M11000[142])
@@ -1490,16 +1288,10 @@ namespace StrobeUI.ViewModels
 
                 }
                 #endregion
-                #region 卷料报警
+                #region 清洁报警
                 if (filmalarmcount++ > 100)
                 {
                     filmalarmcount = 0;
-                    if (CurrentFilmCount < 20)
-                    {
-                        FilmEmptyAlarmString = "卷料空报警，请更换卷料。";
-                        ShowFilmEmptyAlarmWindow = !ShowFilmEmptyAlarmWindow;
-                        metro.ChangeAccent("Red");
-                    }
                     if (DateTime.Now > NextCleanTime)
                     {
                         FilmEmptyAlarmString = "清洁时间到，请清洁。";
@@ -2093,149 +1885,9 @@ namespace StrobeUI.ViewModels
             AddMessage(rst);
             AlarmButtonIsEnabled = true;
         }
-        private void FilmScanCommandCommandExecute()
-        {
-            FilmTextInput = "";
-            FilmProcessBarIsIndeterminate = true;
-            ShowFilmScanWindow = !ShowFilmScanWindow;
 
-        }
-        private void FilmInputConfirmCommandExecute()
-        {
-            //Inifile.INIWriteValue(iniParameterPath, "FET", "FilmText", "WQWERTYUIOQWERTYUIOASDFGHJKLZXCVBNM");
-            if (FilmTextInput != "")
-            {
-                string[] strs = FilmTextInput.Split(new string[] { "/", " " }, StringSplitOptions.RemoveEmptyEntries);
-                if (strs.Length == 4)
-                {
-                    int i = 0;
-                    for (i = 0; i < 3; i++)
-                    {
-                        if (filmRuleItems[i].IsChecked)
-                        {
-                            break;
-                        }
-
-                    }
-                    if (i < 3)
-                    {
-                        AddMessage("选择卷料配置项 " + (i + 1).ToString());
-
-                        if (strs[0].Length == filmRuleItems[i].CodeRule1.Length)
-                        {
-                            for (int j = 0; j < filmRuleItems[i].CodeRule1.Length; j++)
-                            {
-                                if (filmRuleItems[i].CodeRule1[j] != '*' && strs[0][j] != filmRuleItems[i].CodeRule1[j])
-                                {
-                                    AddMessage("CodeRule1未通过");
-                                    return;
-                                }
-                            }
-                            if (strs[1].Length == filmRuleItems[i].CodeRule2.Length)
-                            {
-                                for (int j = 0; j < filmRuleItems[i].CodeRule2.Length; j++)
-                                {
-                                    if (filmRuleItems[i].CodeRule2[j] != '*' && strs[1][j] != filmRuleItems[i].CodeRule1[j])
-                                    {
-                                        AddMessage("CodeRule2未通过");
-                                        return;
-                                    }
-                                }
-                                if (strs[2].Length == filmRuleItems[i].CodeRule3.Length)
-                                {
-                                    for (int j = 0; j < filmRuleItems[i].CodeRule3.Length; j++)
-                                    {
-                                        if (filmRuleItems[i].CodeRule3[j] != '*' && strs[2][j] != filmRuleItems[i].CodeRule3[j])
-                                        {
-                                            AddMessage("CodeRule3未通过");
-                                            return;
-                                        }
-                                    }
-                                    if (strs[3].Length == filmRuleItems[i].CodeRule4.Length)
-                                    {
-                                        for (int j = 0; j < filmRuleItems[i].CodeRule4.Length; j++)
-                                        {
-                                            if (filmRuleItems[i].CodeRule4[j] != '*' && strs[3][j] != filmRuleItems[i].CodeRule4[j])
-                                            {
-                                                AddMessage("CodeRule4未通过");
-                                                return;
-                                            }
-                                        }
-
-                                        try
-                                        {
-                                            MaxFilmCount = CurrentFilmCount = int.Parse(strs[2]);
-                                            Inifile.INIWriteValue(iniParameterPath, "FET", "CurrentFilmCount", CurrentFilmCount.ToString());
-                                            Inifile.INIWriteValue(iniParameterPath, "FET", "MaxFilmCount", MaxFilmCount.ToString());
-                                            FilmText = FilmTextInput.Replace(" ", "");
-                                            Inifile.INIWriteValue(iniParameterPath, "FET", "FilmText", FilmText);
-                                            FilmProcessBarIsIndeterminate = false;
-                                            QuitFilmScanWindow = !QuitFilmScanWindow;
-                                            QuitFilmEmptyAlarmWindow = !QuitFilmEmptyAlarmWindow;
-                                            metro.ChangeAccent("Blue");
-                                            AddMessage("卷料更换成功");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            AddMessage(ex.Message);
-                                        }
-
-
-                                    }
-                                    else
-                                    {
-                                        AddMessage("CodeRule4长度不符合");
-                                    }
-                                }
-                                else
-                                {
-                                    AddMessage("CodeRule3长度不符合");
-                                }
-                            }
-                            else
-                            {
-                                AddMessage("CodeRule2长度不符合");
-                            }
-                        }
-                        else
-                        {
-                            AddMessage("CodeRule1长度不符合");
-                        }
-                    }
-                    else
-                    {
-                        AddMessage("未选择卷料配置项");
-                    }
-                }
-                else
-                {
-                    AddMessage("卷料信息分割数不等于4");
-                }
-            }
-            else
-            {
-                AddMessage("请输入卷料信息");
-            }
-
-        }
-        private void FilmParamSaveCommandExecute()
-        {
-            for (int i = 0; i < 3; i++)
-            {
-                Inifile.INIWriteValue(iniParameterPath, "FET", "CodeRule1_" + (i + 1).ToString(), this.FilmRuleItems[i].CodeRule1);
-                Inifile.INIWriteValue(iniParameterPath, "FET", "CodeRule2_" + (i + 1).ToString(), this.FilmRuleItems[i].CodeRule2);
-                Inifile.INIWriteValue(iniParameterPath, "FET", "CodeRule3_" + (i + 1).ToString(), this.FilmRuleItems[i].CodeRule3);
-                Inifile.INIWriteValue(iniParameterPath, "FET", "CodeRule4_" + (i + 1).ToString(), this.FilmRuleItems[i].CodeRule4);
-                Inifile.INIWriteValue(iniParameterPath, "FET", "IsChecked" + (i + 1).ToString(), this.FilmRuleItems[i].IsChecked.ToString());
-            }
-            Inifile.INIWriteValue(iniParameterPath, "FET", "REVISION", REVISION);
-            Inifile.INIWriteValue(iniParameterPath, "FET", "WORKNO", WORKNO);
-            Inifile.INIWriteValue(iniParameterPath, "FET", "LINEID", LINEID);
-            Inifile.INIWriteValue(iniParameterPath, "FET", "OPERTOR", OPERTOR);
-            AddMessage("卷料配置参数保存完成");
-            FilmProcessBarIsIndeterminate = false; ;
-            QuitFilmScanWindow = !QuitFilmScanWindow;
-        }
+        
+        
         private void CleanActionCommandExecute()
         {
             QuitFilmEmptyAlarmWindow = !QuitFilmEmptyAlarmWindow;

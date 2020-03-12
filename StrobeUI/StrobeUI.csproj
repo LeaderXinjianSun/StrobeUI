@@ -154,14 +154,10 @@
     <Compile Include="Models\Oracle.cs" />
     <Compile Include="Models\ThingetPLC.cs" />
     <Compile Include="Models\UDP.cs" />
-    <Compile Include="ViewModels\FilmRuleItemViewModel.cs" />
     <Compile Include="ViewModels\MainWindowViewModel.cs" />
     <Compile Include="ViewModels\SampleNgItemViewModel.cs" />
     <Compile Include="Views\FilmEmptyAlarmWindow.xaml.cs">
       <DependentUpon>FilmEmptyAlarmWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\FilmScanWindow.xaml.cs">
-      <DependentUpon>FilmScanWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\SampleWindow.xaml.cs">
       <DependentUpon>SampleWindow.xaml</DependentUpon>
@@ -179,10 +175,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="Views\FilmEmptyAlarmWindow.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\FilmScanWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

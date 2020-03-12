@@ -28,7 +28,6 @@ namespace StrobeUI
             InitializeComponent();
             this.DataContext = new MainWindowViewModel();
             this.SetBinding(ShowSampleWindowProperty, "ShowSampleWindow");
-            this.SetBinding(ShowFilmScanWindowProperty, "ShowFilmScanWindow");
             this.SetBinding(ShowFilmEmptyAlarmWindowProperty, "ShowFilmEmptyAlarmWindow");
         }
 
@@ -68,32 +67,7 @@ namespace StrobeUI
 
 
 
-        public bool ShowFilmScanWindow
-        {
-            get { return (bool)GetValue(ShowFilmScanWindowProperty); }
-            set { SetValue(ShowFilmScanWindowProperty, value); }
-        }
-        public static FilmScanWindow FilmScanWindow = null;
-        // Using a DependencyProperty as the backing store for ShowFilmScanWindow.  This enables animation, styling, binding, etc...
-        public static readonly DependencyProperty ShowFilmScanWindowProperty =
-            DependencyProperty.Register("ShowFilmScanWindow", typeof(bool), typeof(MainWindow), new PropertyMetadata(
-
-                new PropertyChangedCallback((d, e) =>
-                {
-                    if (FilmScanWindow != null)
-                    {
-                        if (FilmScanWindow.HasShow)
-                            return;
-                    }
-                    var mMainWindow = d as MainWindow;
-                    FilmScanWindow = new FilmScanWindow();// { Owner = this }.Show();
-                    FilmScanWindow.Owner = Application.Current.MainWindow;
-                    FilmScanWindow.DataContext = mMainWindow.DataContext;
-                    FilmScanWindow.SetBinding(FilmScanWindow.QuitFilmScanWindowProperty, "QuitFilmScanWindow");
-                    FilmScanWindow.HasShow = true;
-                    FilmScanWindow.Show();
-                })
-                ));
+        
 
 
 
