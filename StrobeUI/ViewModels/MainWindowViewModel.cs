@@ -616,7 +616,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200313";
+                this.UIName = "D5XUI 20200317";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -1317,7 +1317,8 @@ namespace StrobeUI.ViewModels
                 {
                     for (int i = 0; i < AlarmList.Count; i++)
                     {
-                        if (M11000[i] != AlarmList[i].State && LampGreenSw.Elapsed.TotalMinutes > 3)
+                        //if (M11000[i] != AlarmList[i].State && LampGreenSw.Elapsed.TotalMinutes > 3)
+                        if (M11000[i] != AlarmList[i].State)
                         {
                             AlarmList[i].State = M11000[i];
                             if (AlarmList[i].State)
@@ -1449,9 +1450,21 @@ namespace StrobeUI.ViewModels
         }
         async void AlarmAction(int i)
         {
-            while (M11000[i])
+            while (true)
             {
                 await Task.Delay(100);
+                try
+                {
+                    if (!M11000[i])
+                    {
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AddMessage("AlarmAction " + ex.Message);
+                }
+
             }
             AlarmList[i].End = DateTime.Now;
             AddMessage(AlarmList[i].Code + AlarmList[i].Content + "解除");
