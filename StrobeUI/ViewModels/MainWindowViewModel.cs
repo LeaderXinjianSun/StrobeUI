@@ -563,6 +563,17 @@ namespace StrobeUI.ViewModels
                 this.RaisePropertyChanged("SpanCleanTime");
             }
         }
+        private double greenLampElapse;
+
+        public double GreenLampElapse
+        {
+            get { return greenLampElapse; }
+            set
+            {
+                greenLampElapse = value;
+                this.RaisePropertyChanged("GreenLampElapse");
+            }
+        }
 
         #endregion
         #region 方法绑定
@@ -581,7 +592,7 @@ namespace StrobeUI.ViewModels
         ThingetPLC Xinjie = new ThingetPLC();
         UDPClient udp1 = new UDPClient();
         UDPClient udp2 = new UDPClient();
-        bool[] M11000; double[] HD200; bool plcstate = false;
+        bool[] M11000; bool plcstate = false;
         List<string> SampleBarcode = new List<string>();
         bool sampleTestStart = false, isInSampleMode = false, sampleTestAbort = false, sampleTestFinished = false;
         List<AlarmData> AlarmList = new List<AlarmData>();
@@ -593,7 +604,7 @@ namespace StrobeUI.ViewModels
         Stopwatch LampGreenSw = new Stopwatch();
         CReader reader = new CReader(); int CardStatus = 1;
         BingLibrary.hjb.Metro.Metro metro = new BingLibrary.hjb.Metro.Metro();
-        int AlarmCount = 0;
+        int AlarmCount = 0; double[] HD200;
         #endregion
         #region 构造函数
         public MainWindowViewModel()
@@ -616,7 +627,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200317";
+                this.UIName = "D5XUI 20200319";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -1188,6 +1199,9 @@ namespace StrobeUI.ViewModels
                                 string stm = string.Format("INSERT INTO HA_F4_LIGHT (PM,LIGHT_ID,MACID,CLASS,LIGHT,SDATE,STIME,ALARM,TIME_1,TIME_2,TIME_3,TIME_4,TIME_5) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','0','0','0','0','0')"
                                     , PM, LIGHT_ID, MACID, GetBanci(), LampColor.ToString(), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("mmddss"), "NA");
                                 _result = mysql.executeQuery(stm);
+                                stm = string.Format("INSERT INTO HA_F4_DATA_FPY (PM,MACID,CLASS,INPUT,OUTPUT,FAIL,FPY) VALUES ('{0}','{1}','{2}','0','0','0','0')"
+                                    , PM, MACID, GetBanci());
+                                _result = mysql.executeQuery(stm);
                             }
                             mysql.DisConnect();
                             return _result.ToString();
@@ -1307,7 +1321,8 @@ namespace StrobeUI.ViewModels
         async void BigDataRun()
         {
             int _LampColor = LampColor;
-            int count1 = 0;
+            int count1 = 0;int count2 = 0;
+            bool first = true;
             LampGreenSw.Start();
             while (true)
             {
@@ -1317,9 +1332,10 @@ namespace StrobeUI.ViewModels
                 {
                     for (int i = 0; i < AlarmList.Count; i++)
                     {
-                        //if (M11000[i] != AlarmList[i].State && LampGreenSw.Elapsed.TotalMinutes > 3)
-                        if (M11000[i] != AlarmList[i].State)
+                        if (M11000[i] != AlarmList[i].State && AlarmList[i].Content != "Null" && (LampGreenSw.Elapsed.TotalMinutes > 3 || first))
+                        //if (M11000[i] != AlarmList[i].State)
                         {
+                            first = false;
                             AlarmList[i].State = M11000[i];
                             if (AlarmList[i].State)
                             {
@@ -1424,27 +1440,59 @@ namespace StrobeUI.ViewModels
                     LampGreenSw.Reset();
                 }
                 #endregion
-                #region 机台指标
+                #region 良率上传
                 if (HD200 != null && plcstate)
                 {
-                    TimeSpan ts = DateTime.Now - GetBanStart();
-                    //妥善率
-                    double ProperlyRate = (ts.TotalMinutes - (double)LampYellowFlickerElapse  - (double)LampRedElapse ) / ts.TotalMinutes * 100;
-                    //报警率
-                    double AlarmRate = AlarmCount / HD200[6] * 100;
-                    //达成率
-                    double YieldRate = HD200[3] / ((ts.TotalMinutes - (double)LampGreenFlickerElapse - (double)LampYellowElapse) * (60 / HD200[7]) * 10) * 100;
-                    //直通率
-                    double PassRate = HD200[3] / HD200[6] * 100;
-
-                    await Task.Run(() => { Xinjie.WriteW(410, (PassRate * 10).ToString("F0")); });//往D410写直通率，保留1位小数
-                    await Task.Run(() => { Xinjie.WriteW(411, (AlarmRate * 10).ToString("F0")); });//往D410写报警率，保留1位小数
-                    await Task.Run(() => { Xinjie.WriteW(412, (YieldRate * 10).ToString("F0")); });//往D411写达成率，保留1位小数
-                    await Task.Run(() => { Xinjie.WriteW(413, (ProperlyRate * 10).ToString("F0")); });//往D413写妥善率，保留1位小数
-
-                    await Task.Run(() => { Xinjie.WriteW(401, AlarmCount.ToString()); });//往D401写报警次数，保留1位小数
+                    if (count2++ >= 60)
+                    {
+                        count2 = 0;
+                        string result = await Task<string>.Run(() =>
+                        {
+                            try
+                            {
+                                int _result = -999;
+                                Mysql mysql = new Mysql();
+                                if (mysql.Connect())
+                                {
+                                    double fpy = HD200[6] > 0 ? HD200[3] / HD200[6] * 100 : 0;
+                                    string stm = string.Format("UPDATE HA_F4_DATA_FPY SET INPUT = '{3}',OUTPUT = '{4}',FAIL = '{5}',FPY = '{6}' WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}'"
+                                        , PM, MACID, GetBanci(), HD200[3].ToString("F0"), HD200[6].ToString("F0"), (HD200[6] - HD200[3]).ToString("F0"), fpy.ToString("F1"));
+                                    _result = mysql.executeQuery(stm);
+                                }
+                                mysql.DisConnect();
+                                return _result.ToString();
+                            }
+                            catch (Exception ex)
+                            {
+                                return ex.Message;
+                            }
+                        });
+                        AddMessage("上传良率" + result);
+                    }
                 }
                 #endregion
+                GreenLampElapse = Math.Round(LampGreenSw.Elapsed.TotalMinutes, 1);
+                //#region 机台指标
+                //if (HD200 != null && plcstate)
+                //{
+                //    TimeSpan ts = DateTime.Now - GetBanStart();
+                //    //妥善率
+                //    double ProperlyRate = (ts.TotalMinutes - (double)LampYellowFlickerElapse  - (double)LampRedElapse ) / ts.TotalMinutes * 100;
+                //    //报警率
+                //    double AlarmRate = AlarmCount / HD200[6] * 100;
+                //    //达成率
+                //    double YieldRate = HD200[3] / ((ts.TotalMinutes - (double)LampGreenFlickerElapse - (double)LampYellowElapse) * (60 / HD200[7]) * 10) * 100;
+                //    //直通率
+                //    double PassRate = HD200[3] / HD200[6] * 100;
+
+                //    await Task.Run(() => { Xinjie.WriteW(410, (PassRate * 10).ToString("F0")); });//往D410写直通率，保留1位小数
+                //    await Task.Run(() => { Xinjie.WriteW(411, (AlarmRate * 10).ToString("F0")); });//往D410写报警率，保留1位小数
+                //    await Task.Run(() => { Xinjie.WriteW(412, (YieldRate * 10).ToString("F0")); });//往D411写达成率，保留1位小数
+                //    await Task.Run(() => { Xinjie.WriteW(413, (ProperlyRate * 10).ToString("F0")); });//往D413写妥善率，保留1位小数
+
+                //    await Task.Run(() => { Xinjie.WriteW(401, AlarmCount.ToString()); });//往D401写报警次数，保留1位小数
+                //}
+                //#endregion
             }
 
         }

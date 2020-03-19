@@ -136,6 +136,9 @@
             <Label>Cycle</Label>
             <TextBlock Text="{Binding PLCCycle}"></TextBlock>
             <TextBlock Text="ms"></TextBlock>
+            <Label>Green</Label>
+            <TextBlock Text="{Binding GreenLampElapse}"></TextBlock>
+            <TextBlock Text="min"></TextBlock>
         </StatusBar>
     </Grid>
 </metro:MetroWindow>
