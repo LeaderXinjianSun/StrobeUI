@@ -627,7 +627,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200319";
+                this.UIName = "D5XUI 20200320";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -918,21 +918,21 @@ namespace StrobeUI.ViewModels
                     }
                     else
                     {
-                        if (M100[4])//闪黄
+                        if (M100[3])//闪绿
                         {
-                            LampColor = 4;
+                            LampColor = 2;
                         }
                         else
                         {
-                            if (M100[5])//长黄
+                            if (M100[4])//闪黄
                             {
-                                LampColor = 3;
+                                LampColor = 4;
                             }
                             else
                             {
-                                if (M100[3])//闪绿
+                                if (M100[5])//长黄
                                 {
-                                    LampColor = 2;
+                                    LampColor = 3;
                                 }
                                 else
                                 {
@@ -940,6 +940,10 @@ namespace StrobeUI.ViewModels
                                 }
                             }
                         }
+
+
+
+
                     }
 
                     #endregion
@@ -1345,27 +1349,7 @@ namespace StrobeUI.ViewModels
                                 AlarmList[i].End = DateTime.Now;
                                 AddMessage(AlarmList[i].Code + AlarmList[i].Content + "发生");
 
-                                string result = await Task<string>.Run(() =>
-                                {
-                                    try
-                                    {
-                                        int _result = -999;
-                                        Mysql mysql = new Mysql();
-                                        if (mysql.Connect())
-                                        {
-                                            string stm = string.Format("INSERT INTO HA_F4_DATA_ALARM (PM, GROUP1,TRACK,MACID,NAME,SSTARTDATE,SSTARTTIME,SSTOPDATE,SSTOPTIME,TIME,CLASS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}')"
-                                                , PM, GROUP1, TRACK, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("HHmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("HHmmss"), "0", GetBanci());
-                                            _result = mysql.executeQuery(stm);
-                                        }
-                                        mysql.DisConnect();
-                                        return _result.ToString();
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        return ex.Message;
-                                    }
-                                });
-                                AddMessage("插入报警" + result);
+
 
                                 AlarmAction(i);//等待报警结束
                             }
@@ -1456,7 +1440,7 @@ namespace StrobeUI.ViewModels
                                 {
                                     double fpy = HD200[6] > 0 ? HD200[3] / HD200[6] * 100 : 0;
                                     string stm = string.Format("UPDATE HA_F4_DATA_FPY SET INPUT = '{3}',OUTPUT = '{4}',FAIL = '{5}',FPY = '{6}' WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}'"
-                                        , PM, MACID, GetBanci(), HD200[3].ToString("F0"), HD200[6].ToString("F0"), (HD200[6] - HD200[3]).ToString("F0"), fpy.ToString("F1"));
+                                        , PM, MACID, GetBanci(), HD200[6].ToString("F0"), HD200[3].ToString("F0"), (HD200[6] - HD200[3]).ToString("F0"), fpy.ToString("F1"));
                                     _result = mysql.executeQuery(stm);
                                 }
                                 mysql.DisConnect();
@@ -1503,7 +1487,7 @@ namespace StrobeUI.ViewModels
                 await Task.Delay(100);
                 try
                 {
-                    if (!M11000[i])
+                    if (LampGreenSw.Elapsed.TotalMinutes > 3)
                     {
                         break;
                     }
@@ -1516,7 +1500,30 @@ namespace StrobeUI.ViewModels
             }
             AlarmList[i].End = DateTime.Now;
             AddMessage(AlarmList[i].Code + AlarmList[i].Content + "解除");
-            TimeSpan time = AlarmList[i].End - AlarmList[i].Start;
+            TimeSpan time = AlarmList[i].End - AlarmList[i].Start - LampGreenSw.Elapsed;
+            //string result = await Task<string>.Run(() =>
+            //{
+            //    try
+            //    {
+            //        int _result = -999;
+            //        Mysql mysql = new Mysql();
+            //        if (mysql.Connect())
+            //        {
+            //            string stm = string.Format("UPDATE HA_F4_DATA_ALARM SET SSTOPDATE = '{5}',SSTOPTIME = '{6}',TIME = '{7}' WHERE PM = '{0}' AND MACID = '{1}' AND NAME = '{2}' AND SSTARTDATE = '{3}' AND SSTARTTIME = '{4}'"
+            //                , PM, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("HHmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("HHmmss"), time.TotalMinutes.ToString("F2"));
+            //            _result = mysql.executeQuery(stm);
+            //        }
+            //        mysql.DisConnect();
+            //        return _result.ToString();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        return ex.Message;
+            //    }
+            //});
+            //AddMessage("更新报警" + result);
+
+
             string result = await Task<string>.Run(() =>
             {
                 try
@@ -1525,8 +1532,8 @@ namespace StrobeUI.ViewModels
                     Mysql mysql = new Mysql();
                     if (mysql.Connect())
                     {
-                        string stm = string.Format("UPDATE HA_F4_DATA_ALARM SET SSTOPDATE = '{5}',SSTOPTIME = '{6}',TIME = '{7}' WHERE PM = '{0}' AND MACID = '{1}' AND NAME = '{2}' AND SSTARTDATE = '{3}' AND SSTARTTIME = '{4}'"
-                            , PM, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("HHmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("HHmmss"), time.TotalMinutes.ToString("F2"));
+                        string stm = string.Format("INSERT INTO HA_F4_DATA_ALARM (PM, GROUP1,TRACK,MACID,NAME,SSTARTDATE,SSTARTTIME,SSTOPDATE,SSTOPTIME,TIME,CLASS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}')"
+                            , PM, GROUP1, TRACK, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("HHmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("HHmmss"), time.TotalMinutes.ToString("F1"), GetBanci());
                         _result = mysql.executeQuery(stm);
                     }
                     mysql.DisConnect();
@@ -1537,7 +1544,7 @@ namespace StrobeUI.ViewModels
                     return ex.Message;
                 }
             });
-            AddMessage("更新报警" + result);
+            AddMessage("插入报警" + result);
         }
         private bool CheckSampleFromDt()
         {
