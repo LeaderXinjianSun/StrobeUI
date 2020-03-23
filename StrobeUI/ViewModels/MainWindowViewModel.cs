@@ -627,7 +627,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 2020032002";
+                this.UIName = "D5XUI 2020032301";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -1340,6 +1340,7 @@ namespace StrobeUI.ViewModels
                         //if (M11000[i] != AlarmList[i].State)
                         {
                             first = false;
+                            LampGreenSw.Reset();
                             AlarmList[i].State = M11000[i];
                             if (AlarmList[i].State)
                             {
@@ -1422,6 +1423,10 @@ namespace StrobeUI.ViewModels
                 if (LampColor != 1)
                 {
                     LampGreenSw.Reset();
+                }
+                if (LampColor == 1 && LampGreenSw.Elapsed == TimeSpan.Zero)
+                {
+                    LampGreenSw.Restart();
                 }
                 #endregion
                 #region 良率上传
