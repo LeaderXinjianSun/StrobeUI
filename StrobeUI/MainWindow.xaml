@@ -63,7 +63,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition></RowDefinition>
                 <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
+              
             </Grid.RowDefinitions>
             <GroupBox Header="大数据">
                 <StackPanel Orientation="Vertical">
@@ -82,6 +82,10 @@
                     <StackPanel Orientation="Horizontal" Margin="1">
                         <TextBlock VerticalAlignment="Center" Text="机台编号" Width="60"></TextBlock>
                         <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding MACID}"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="1">
+                        <TextBlock VerticalAlignment="Center" Text="母机台编号" Width="60"></TextBlock>
+                        <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding MACID_M}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="1">
                         <TextBlock VerticalAlignment="Center" Text="三色灯编号" Width="60"></TextBlock>
