@@ -585,6 +585,17 @@ namespace StrobeUI.ViewModels
                 this.RaisePropertyChanged("MACID_M");
             }
         }
+        private string wORKSTATION;
+
+        public string WORKSTATION
+        {
+            get { return wORKSTATION; }
+            set
+            {
+                wORKSTATION = value;
+                this.RaisePropertyChanged("WORKSTATION");
+            }
+        }
 
         #endregion
         #region 方法绑定
@@ -638,7 +649,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 2020032501";
+                this.UIName = "D5XUI 2020040301";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -695,6 +706,7 @@ namespace StrobeUI.ViewModels
                 TRACK = Inifile.INIGetStringValue(iniParameterPath, "BigData", "TRACK", "NA");
                 MACID = Inifile.INIGetStringValue(iniParameterPath, "BigData", "MACID", "NA");
                 MACID_M = Inifile.INIGetStringValue(iniParameterPath, "BigData", "MACID_M", "NA");
+                WORKSTATION = Inifile.INIGetStringValue(iniParameterPath, "BigData", "WORKSTATION", "AUTO");
                 LIGHT_ID = Inifile.INIGetStringValue(iniParameterPath, "BigData", "LIGHT_ID", "NA");
                 LampGreenElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampGreenElapse", "0"));
                 LampGreenFlickerElapse = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "BigData", "LampGreenFlickerElapse", "0"));
@@ -1216,11 +1228,11 @@ namespace StrobeUI.ViewModels
                             {
                                 //string stm = string.Format("UPDATE HA_F4_LIGHT SET LIGHT = '{3}',SDATE = '{4}',STIME = '{5}',ALARM = '{6}',CLASS = '{7}',TIME_1 = '0',TIME_2 = '0',TIME_3 = '0',TIME_4 = '0',TIME_5 = '0' WHERE PM = '{0}' AND LIGHT_ID = '{1}' AND MACID = '{2}'"
                                 //    , PM, LIGHT_ID, MACID, LampColor, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("mmddss"), "NA", GetBanci());
-                                string stm = string.Format("INSERT INTO HA_F4_LIGHT (PM,LIGHT_ID,MACID,CLASS,LIGHT,SDATE,STIME,ALARM,TIME_1,TIME_2,TIME_3,TIME_4,TIME_5) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','0','0','0','0','0')"
-                                    , PM, LIGHT_ID, MACID, GetBanci(), LampColor.ToString(), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("mmddss"), "NA");
+                                string stm = string.Format("INSERT INTO HA_F4_LIGHT (PM,LIGHT_ID,MACID,CLASS,LIGHT,SDATE,STIME,ALARM,WORKSTATION,TIME_1,TIME_2,TIME_3,TIME_4,TIME_5) VALUES ('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','0','0','0','0','0')"
+                                    , PM, LIGHT_ID, MACID, GetBanci(), LampColor.ToString(), DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("mmddss"), "NA", WORKSTATION);
                                 _result = mysql.executeQuery(stm);
-                                stm = string.Format("INSERT INTO HA_F4_DATA_FPY (PM,MACID,CLASS,INPUT,OUTPUT,FAIL,FPY) VALUES ('{0}','{1}','{2}','0','0','0','0')"
-                                    , PM, MACID, GetBanci());
+                                stm = string.Format("INSERT INTO HA_F4_DATA_FPY (PM,MACID,CLASS,WORKSTATION,INPUT,OUTPUT,FAIL,FPY) VALUES ('{0}','{1}','{2}','{3}','0','0','0','0')"
+                                    , PM, MACID, GetBanci(), WORKSTATION);
                                 _result = mysql.executeQuery(stm);
                             }
                             mysql.DisConnect();
@@ -1427,9 +1439,9 @@ namespace StrobeUI.ViewModels
                             if (mysql.Connect())
                             {
                                 string currentAlarm = LampColor == 4 ? CurrentAlarm : "NA";
-                                string stm = string.Format("UPDATE HA_F4_LIGHT SET LIGHT = '{3}',SDATE = '{4}',STIME = '{5}',ALARM = '{6}',TIME_1 = '{8}',TIME_2 = '{9}',TIME_3 = '{10}',TIME_4 = '{11}',TIME_5 = '{12}' WHERE PM = '{0}' AND LIGHT_ID = '{1}' AND MACID = '{2}' AND CLASS = '{7}'"
+                                string stm = string.Format("UPDATE HA_F4_LIGHT SET LIGHT = '{3}',SDATE = '{4}',STIME = '{5}',ALARM = '{6}',TIME_1 = '{8}',TIME_2 = '{9}',TIME_3 = '{10}',TIME_4 = '{11}',TIME_5 = '{12}' WHERE PM = '{0}' AND LIGHT_ID = '{1}' AND MACID = '{2}' AND CLASS = '{7}' AND WORKSTATION = '{13}'"
                                     , PM, LIGHT_ID, MACID, LampColor, DateTime.Now.ToString("yyyyMMdd"), DateTime.Now.ToString("mmddss"), currentAlarm, GetBanci(), ((double)LampGreenElapse / 60).ToString("F2"), ((double)LampGreenFlickerElapse / 60).ToString("F2"), ((double)LampYellowElapse / 60).ToString("F2")
-                                    , ((double)LampYellowFlickerElapse / 60).ToString("F2"), ((double)LampRedElapse / 60).ToString("F2"));
+                                    , ((double)LampYellowFlickerElapse / 60).ToString("F2"), ((double)LampRedElapse / 60).ToString("F2"), WORKSTATION);
                                 _result = mysql.executeQuery(stm);
                             }
                             mysql.DisConnect();
@@ -1466,8 +1478,8 @@ namespace StrobeUI.ViewModels
                                 if (mysql.Connect())
                                 {
                                     double fpy = HD200[6] > 0 ? HD200[3] / HD200[6] * 100 : 0;
-                                    string stm = string.Format("UPDATE HA_F4_DATA_FPY SET INPUT = '{3}',OUTPUT = '{4}',FAIL = '{5}',FPY = '{6}' WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}'"
-                                        , PM, MACID, GetBanci(), HD200[6].ToString("F0"), HD200[3].ToString("F0"), (HD200[6] - HD200[3]).ToString("F0"), fpy.ToString("F1"));
+                                    string stm = string.Format("UPDATE HA_F4_DATA_FPY SET INPUT = '{3}',OUTPUT = '{4}',FAIL = '{5}',FPY = '{6}' WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}' AND WORKSTATION = '{7}'"
+                                        , PM, MACID, GetBanci(), HD200[6].ToString("F0"), HD200[3].ToString("F0"), (HD200[6] - HD200[3]).ToString("F0"), fpy.ToString("F1"), WORKSTATION);
                                     _result = mysql.executeQuery(stm);
                                 }
                                 mysql.DisConnect();
@@ -1559,8 +1571,8 @@ namespace StrobeUI.ViewModels
                     Mysql mysql = new Mysql();
                     if (mysql.Connect())
                     {
-                        string stm = string.Format("INSERT INTO HA_F4_DATA_ALARM (PM, GROUP1,TRACK,MACID,NAME,SSTARTDATE,SSTARTTIME,SSTOPDATE,SSTOPTIME,TIME,CLASS) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}')"
-                            , PM, GROUP1, TRACK, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("HHmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("HHmmss"), time.TotalMinutes.ToString("F1"), GetBanci());
+                        string stm = string.Format("INSERT INTO HA_F4_DATA_ALARM (PM, GROUP1,TRACK,MACID,NAME,SSTARTDATE,SSTARTTIME,SSTOPDATE,SSTOPTIME,TIME,CLASS,WORKSTATION) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}')"
+                            , PM, GROUP1, TRACK, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("HHmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("HHmmss"), time.TotalMinutes.ToString("F1"), GetBanci(), WORKSTATION);
                         _result = mysql.executeQuery(stm);
                     }
                     mysql.DisConnect();
@@ -1917,6 +1929,7 @@ namespace StrobeUI.ViewModels
                 Inifile.INIWriteValue(iniParameterPath, "BigData", "GROUP1", GROUP1);
                 Inifile.INIWriteValue(iniParameterPath, "BigData", "TRACK", TRACK);
                 Inifile.INIWriteValue(iniParameterPath, "BigData", "MACID", MACID);
+                Inifile.INIWriteValue(iniParameterPath, "BigData", "WORKSTATION", WORKSTATION);
                 Inifile.INIWriteValue(iniParameterPath, "BigData", "MACID_M", MACID_M);
                 Inifile.INIWriteValue(iniParameterPath, "BigData", "LIGHT_ID", LIGHT_ID);
                 BigDataEditIsReadOnly = true;
@@ -1942,7 +1955,7 @@ namespace StrobeUI.ViewModels
                     Mysql mysql = new Mysql();
                     if (mysql.Connect())
                     {
-                        string stm = string.Format("SELECT * FROM HA_F4_DATA_ALARM WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}'", PM, MACID, GetBanci());
+                        string stm = string.Format("SELECT * FROM HA_F4_DATA_ALARM WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}' AND WORKSTATION = '{3}'", PM, MACID, GetBanci(), WORKSTATION);
                         DataSet ds = mysql.Select(stm);
 
                         DataTable dt = ds.Tables["table0"];

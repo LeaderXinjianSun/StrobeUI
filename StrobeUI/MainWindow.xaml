@@ -92,6 +92,10 @@
                         <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding LIGHT_ID}"></TextBox>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="1">
+                        <TextBlock VerticalAlignment="Center" Text="工站" Width="60"></TextBlock>
+                        <TextBox IsReadOnly="{Binding BigDataEditIsReadOnly}" Width="100" Text="{Binding WORKSTATION}"></TextBox>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="1">
                         <Button Content="{Binding BigDataPeramEdit}" Width="60" Height="30" HorizontalAlignment="Right" Margin="5" Command="{Binding BigDataPeramEditCommand}"></Button>
                         <Button Content="Alarm" Width="60" Height="30" IsEnabled="{Binding AlarmButtonIsEnabled}" Command="{Binding BigDataAlarmGetCommand}"></Button>
                         <Button Visibility="Collapsed" Height="30" Width="60" Content="功能" Margin="5" Command="{Binding FuncTestCommand}"></Button>
