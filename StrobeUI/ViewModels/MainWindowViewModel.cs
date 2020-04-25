@@ -649,7 +649,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 2020040301";
+                this.UIName = "D5XUI 2020042501";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -1143,7 +1143,7 @@ namespace StrobeUI.ViewModels
                         AddMessage("样本测试中断");
                         Xinjie.SetM(11110, false);
                         isInSampleMode = false;
-                        SampleBarcode.Clear();
+                        //SampleBarcode.Clear();
                     }
                     SampleGridVisibility = (DateTime.Now - SamDateBigin).TotalSeconds > 0 && IsSampleCheck ? "Visible" : "Collapsed";
                     if ((DateTime.Now - SamDateBigin).TotalSeconds > 0 && IsSampleCheck)
@@ -1176,7 +1176,7 @@ namespace StrobeUI.ViewModels
                         Xinjie.SetM(11110, false);
                         if (res)
                         {
-                            AddMessage("样本测试成功");
+                            AddMessage("样本测试成功");                            
                             SampleBarcode.Clear();
                             LastSampleTime = DateTime.Now;
                             Inifile.INIWriteValue(iniParameterPath, "Sample", "LastSample", LastSampleTime.ToString());
@@ -1277,8 +1277,8 @@ namespace StrobeUI.ViewModels
                                 SXJLibrary.Oracle oraDB = new SXJLibrary.Oracle("qddb04.eavarytech.com", "mesdb04", "ictdata", "ictdata*168");
                                 if (oraDB.isConnect())
                                 {
-                                    string stm = string.Format("SELECT * FROM CFT_DATA WHERE MNO = '{0}' ORDER BY TESTDATE DESC,TESTTIME DESC",
-                                        MACID_M);
+                                    string stm = string.Format("SELECT * FROM CFT_DATA WHERE CFT01 LIKE '%{0}%' AND MNO = '{1}' AND TRESULT = 'PASS' ORDER BY TESTDATE DESC,TESTTIME DESC",
+                                        PM, MACID_M);
                                     DataSet ds = oraDB.executeQuery(stm);
                                     DataTable dt = ds.Tables[0];
                                     if (dt.Rows.Count > 0)
@@ -1359,6 +1359,7 @@ namespace StrobeUI.ViewModels
         async void BigDataRun()
         {
             int _LampColor = LampColor;
+            int preLampColor = LampColor;
             int count1 = 0;int count2 = 0;
             bool first = true;
             LampGreenSw.Start();
@@ -1414,8 +1415,11 @@ namespace StrobeUI.ViewModels
                         Inifile.INIWriteValue(iniParameterPath, "BigData", "LampYellowFlickerElapse", LampYellowFlickerElapse.ToString());
                         break;
                     case 5:
-                        LampRedElapse += 1;
-                        Inifile.INIWriteValue(iniParameterPath, "BigData", "LampRedElapse", LampRedElapse.ToString());
+                        if (preLampColor == 4)
+                        {
+                            LampRedElapse += 1;
+                            Inifile.INIWriteValue(iniParameterPath, "BigData", "LampRedElapse", LampRedElapse.ToString());
+                        }
                         break;
                     default:
                         break;
@@ -1428,6 +1432,7 @@ namespace StrobeUI.ViewModels
                     {
                         LampGreenSw.Restart();
                     }
+                    preLampColor = _LampColor;
                     _LampColor = LampColor;
                     count1 = 0;
                     string result = await Task<string>.Run(() =>
@@ -1598,7 +1603,13 @@ namespace StrobeUI.ViewModels
                     {
                         //select * from up_date where update >= to_date('2007-09-07 00:00:00','yyyy-mm-dd hh24:mi:ss')
                         //select* from barsamrec where barcode in ('G5Y796383C9LQ5919SAT','G5Y9321RAH5K7QC8V-G') and sdate > to_date('2019/8/16 18:45:16', 'yyyy/mm/dd hh24:mi:ss')
-                        string selectSqlStr = "select * from barsamrec where MNO in ('" + ZPMID + "','" + FCTMID + "') and sdate > to_date('" + DateTime.Now.AddMinutes(-30).ToString() + "', 'yyyy/mm/dd hh24:mi:ss')";
+                        string samplebarcodes = "";
+                        foreach (var item in SampleBarcode)
+                        {
+                            samplebarcodes += "'" + item + "',";
+                        }
+                        samplebarcodes = samplebarcodes.Substring(0, samplebarcodes.Length - 1);
+                        string selectSqlStr = "select * from barsamrec where BARCODE in (" + samplebarcodes + ") and sdate > to_date('" + DateTime.Now.AddMinutes(-30).ToString() + "', 'yyyy/mm/dd hh24:mi:ss')";
                         //AddMessage(selectSqlStr);
                         DataSet s = oraDB.executeQuery(selectSqlStr);
                         DataTable dt = s.Tables[0];
