@@ -649,7 +649,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 2020042501";
+                this.UIName = "D5XUI 20200515";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -668,7 +668,8 @@ namespace StrobeUI.ViewModels
                         NGItemClassify = Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItemClassify" + (i + 1).ToString(), "ZP")
                     });
                 }
-                IsSampleCheck = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "Sample", "IsSampleCheck", "True"));
+                //IsSampleCheck = bool.Parse(Inifile.INIGetStringValue(iniParameterPath, "Sample", "IsSampleCheck", "True"));
+                IsSampleCheck = true;
                 NGItemCount = int.Parse(Inifile.INIGetStringValue(iniParameterPath, "Sample", "NGItemCount", "9"));
                 SamMode = Inifile.INIGetStringValue(iniParameterPath, "Sample", "SamMode", "2h");
                 ZPMID = Inifile.INIGetStringValue(iniParameterPath, "Sample", "ZPMID", "999");

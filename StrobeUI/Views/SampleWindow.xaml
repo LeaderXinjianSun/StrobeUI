@@ -32,7 +32,7 @@
             </ListBox>
         </GroupBox>
         <StackPanel Grid.Column="1">
-            <CheckBox Content="允许样本" VerticalAlignment="Center" HorizontalAlignment="Left" Visibility="Visible" IsChecked="{Binding IsSampleCheck}"></CheckBox>
+            <!--<CheckBox Content="允许样本" VerticalAlignment="Center" HorizontalAlignment="Left" Visibility="Visible" IsChecked="{Binding IsSampleCheck}"></CheckBox>-->
             <StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
                 <TextBlock Text="不良项数" Width="60" VerticalAlignment="Center"></TextBlock>
                 <TextBox Margin="1" Width="60" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Text="{Binding NGItemCount}"></TextBox>
