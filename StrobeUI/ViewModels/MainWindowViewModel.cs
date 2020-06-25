@@ -17,6 +17,7 @@ using OfficeOpenXml;
 using System.Data;
 using SXJLibrary;
 using 读写器530SDK;
+using Newtonsoft.Json;
 
 namespace StrobeUI.ViewModels
 {
@@ -596,6 +597,17 @@ namespace StrobeUI.ViewModels
                 this.RaisePropertyChanged("WORKSTATION");
             }
         }
+        private string mNOStr;
+
+        public string MNOStr
+        {
+            get { return mNOStr; }
+            set
+            {
+                mNOStr = value;
+                this.RaisePropertyChanged("MNOStr");
+            }
+        }
 
         #endregion
         #region 方法绑定
@@ -627,6 +639,7 @@ namespace StrobeUI.ViewModels
         CReader reader = new CReader(); int CardStatus = 1;
         BingLibrary.hjb.Metro.Metro metro = new BingLibrary.hjb.Metro.Metro();
         int AlarmCount = 0; double[] HD200; bool CardLockFlag; DateTime CardLockTime;
+        Param paramJson;
         #endregion
         #region 构造函数
         public MainWindowViewModel()
@@ -649,12 +662,26 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200515";
+                this.UIName = "D5XUI 20200624";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
                 this.AlarmButtonIsEnabled = true;
                 this.SampleGridVisibility = "Collapsed";
+                try
+                {
+                    using (StreamReader reader = new StreamReader(Path.Combine(System.Environment.CurrentDirectory, "Param.json")))
+                    {
+                        string json = reader.ReadToEnd();
+                        paramJson = JsonConvert.DeserializeObject<Param>(json);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    paramJson = new Param();
+                    AddMessage(ex.Message);
+                }
+                MNOStr = paramJson.MNOStr;
                 #endregion
                 #region 样本
                 LastSampleTime = Convert.ToDateTime(Inifile.INIGetStringValue(iniParameterPath, "Sample", "LastSample", "2020/1/1 00:00:00"));
@@ -1610,7 +1637,17 @@ namespace StrobeUI.ViewModels
                             samplebarcodes += "'" + item + "',";
                         }
                         samplebarcodes = samplebarcodes.Substring(0, samplebarcodes.Length - 1);
-                        string selectSqlStr = "select * from barsamrec where BARCODE in (" + samplebarcodes + ") and sdate > to_date('" + DateTime.Now.AddMinutes(-30).ToString() + "', 'yyyy/mm/dd hh24:mi:ss')";
+                        string[] mnos = MNOStr.Split(new string[] { "\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+                        string sampleMNOs = "";
+                        for (int i = 0; i < mnos.Length; i++)
+                        {
+                            if (mnos[i] != "")
+                            {
+                                sampleMNOs += "'" + mnos[i] + "',";
+                            }
+                        }
+                        sampleMNOs = sampleMNOs.Substring(0, sampleMNOs.Length - 1);
+                        string selectSqlStr = "select * from barsamrec where BARCODE in (" + samplebarcodes + ") and MNO in (" + sampleMNOs + ") and sdate > to_date('" + DateTime.Now.AddMinutes(-30).ToString() + "', 'yyyy/mm/dd hh24:mi:ss')";
                         //AddMessage(selectSqlStr);
                         DataSet s = oraDB.executeQuery(selectSqlStr);
                         DataTable dt = s.Tables[0];
@@ -1837,6 +1874,24 @@ namespace StrobeUI.ViewModels
             }
             MessageStr += System.DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss") + " " + str;
         }
+        private void WriteToJson(object p, string path)
+        {
+            try
+            {
+                using (FileStream fs = File.Open(path, FileMode.Create))
+                using (StreamWriter sw = new StreamWriter(fs))
+                using (JsonWriter jw = new JsonTextWriter(sw))
+                {
+                    jw.Formatting = Formatting.Indented;
+                    JsonSerializer serializer = new JsonSerializer();
+                    serializer.Serialize(jw, p);
+                }
+            }
+            catch (Exception ex)
+            {
+                AddMessage(ex.Message);
+            }
+        }
         #endregion
         #region 方法绑定执行函数
         private void FuncTestCommandExecute()
@@ -1925,6 +1980,8 @@ namespace StrobeUI.ViewModels
             Inifile.INIWriteValue(iniParameterPath, "Sample", "SamMode", SamMode);
             Inifile.INIWriteValue(iniParameterPath, "Sample", "ZPMID", ZPMID);
             Inifile.INIWriteValue(iniParameterPath, "Sample", "FCTMID", FCTMID);
+            paramJson.MNOStr = MNOStr;
+            WriteToJson(paramJson, Path.Combine(System.Environment.CurrentDirectory, "Param.json"));
             QuitSampleWindow = !QuitSampleWindow;
             AddMessage("样本参数保存完成");
         }
@@ -2019,5 +2076,13 @@ namespace StrobeUI.ViewModels
             Inifile.INIWriteValue(iniParameterPath, "Clean", "LastCleanTime", LastCleanTime.ToString());
         }
         #endregion
+    }
+    public class Param
+    {
+        public string MNOStr { set; get; }
+        public Param()
+        {
+            MNOStr = "";
+        }
     }
 }

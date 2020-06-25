@@ -52,7 +52,10 @@
                 <TextBlock Text="FCTMID:" Width="60"></TextBlock>
                 <TextBox Width="60" Text="{Binding FCTMID}"></TextBox>
             </StackPanel>
-
+            <StackPanel Orientation="Vertical">
+                <TextBlock Text="测试机台(MNO)"></TextBlock>
+                <TextBox AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="1" Height="100" Text="{Binding MNOStr}"></TextBox>
+            </StackPanel>
         </StackPanel>
 
         <Grid Grid.ColumnSpan="2" Visibility="{Binding SampleWindowPasswordPageVisibility,FallbackValue=Collapsed}" Background="White">
