@@ -662,7 +662,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200624";
+                this.UIName = "D5XUI 20200629";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -1378,6 +1378,7 @@ namespace StrobeUI.ViewModels
                     {
                         FilmEmptyAlarmString = "清洁时间到，请清洁。";
                         ShowFilmEmptyAlarmWindow = !ShowFilmEmptyAlarmWindow;
+                        await Task.Run(()=> { Xinjie.SetM(11165, true); });
                         metro.ChangeAccent("Red");
                     }
                 }
@@ -2074,6 +2075,7 @@ namespace StrobeUI.ViewModels
             metro.ChangeAccent("Blue");
             LastCleanTime = DateTime.Now;
             Inifile.INIWriteValue(iniParameterPath, "Clean", "LastCleanTime", LastCleanTime.ToString());
+            Task.Run(() => { Xinjie.SetM(11165, false); });
         }
         #endregion
     }
