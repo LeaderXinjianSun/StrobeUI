@@ -629,7 +629,7 @@ namespace StrobeUI.ViewModels
         bool[] M11000; bool plcstate = false;
         List<string> SampleBarcode = new List<string>();
         bool sampleTestStart = false, isInSampleMode = false, sampleTestAbort = false, sampleTestFinished = false;
-        List<AlarmData> AlarmList = new List<AlarmData>();
+         List<AlarmData> AlarmList = new List<AlarmData>();
         string LastBanci;
         DateTime SamDateBigin, SamStartDatetime;
         int LampColor = 1;
@@ -662,7 +662,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200629";
+                this.UIName = "D5XUI 20200716";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -1164,7 +1164,7 @@ namespace StrobeUI.ViewModels
                 {
                     isInSampleMode = M11000[110];
                     sampleTestAbort = M11000[111];
-                    sampleTestFinished = M11000[112];
+                    //sampleTestFinished = M11000[112];
                     sampleTestStart = M11000[113];
                     if (isInSampleMode && sampleTestAbort)
                     {
@@ -1197,26 +1197,32 @@ namespace StrobeUI.ViewModels
                             }
                         }
                     }
-                    if (isInSampleMode && sampleTestFinished)
+                    if (sampleTestFinished != M11000[112])
                     {
-                        bool res = CheckSampleFromDt();
-                        Xinjie.SetM(11114, !res);
-                        Xinjie.SetM(11110, false);
-                        if (res)
+                        if (isInSampleMode && M11000[112])
                         {
-                            AddMessage("样本测试成功");                            
-                            SampleBarcode.Clear();
-                            LastSampleTime = DateTime.Now;
-                            Inifile.INIWriteValue(iniParameterPath, "Sample", "LastSample", LastSampleTime.ToString());
-                            Xinjie.SetM(11116, false);
+
+                            bool res = CheckSampleFromDt();
+                            Xinjie.SetM(11114, !res);
+                            Xinjie.SetM(11110, false);
+                            if (res)
+                            {
+                                AddMessage("样本测试成功");
+                                SampleBarcode.Clear();
+                                LastSampleTime = DateTime.Now;
+                                Inifile.INIWriteValue(iniParameterPath, "Sample", "LastSample", LastSampleTime.ToString());
+                                Xinjie.SetM(11116, false);
+                            }
+                            else
+                            {
+                                //NowSam = DateTime.Now;
+                                AddMessage("样本测试失败");
+                            }
+                            Xinjie.SetM(11115, true);                            
                         }
-                        else
-                        {
-                            //NowSam = DateTime.Now;
-                            AddMessage("样本测试失败");
-                        }
-                        Xinjie.SetM(11115, true);
+                        sampleTestFinished = M11000[112];
                     }
+                    
                 }
 
                 #endregion
