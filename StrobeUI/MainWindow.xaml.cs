@@ -29,6 +29,8 @@ namespace StrobeUI
             this.DataContext = new MainWindowViewModel();
             this.SetBinding(ShowSampleWindowProperty, "ShowSampleWindow");
             this.SetBinding(ShowFilmEmptyAlarmWindowProperty, "ShowFilmEmptyAlarmWindow");
+            this.SetBinding(ShowAlarmLoginWindowProperty, "ShowAlarmLoginWindow");//显示报警弹出界面
+
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -96,6 +98,33 @@ namespace StrobeUI
                     FilmEmptyAlarmWindow.Show();
                 })
                 ));
+
+
+
+        public static AlarmLoginWindow AlarmLoginWindow = null;
+
+        public static readonly DependencyProperty ShowAlarmLoginWindowProperty =
+            DependencyProperty.Register("ShowAlarmLoginWindow", typeof(bool), typeof(MainWindow), new PropertyMetadata(
+                new PropertyChangedCallback((d, e) =>
+                {
+                    if (AlarmLoginWindow != null)
+                    {
+                        if (AlarmLoginWindow.HasShow)
+                            return;
+                    }
+                    var mMainWindow = d as MainWindow;
+                    AlarmLoginWindow = new AlarmLoginWindow();// { Owner = this }.Show();
+                    AlarmLoginWindow.Owner = Application.Current.MainWindow;
+                    AlarmLoginWindow.DataContext = mMainWindow.DataContext;
+                    AlarmLoginWindow.SetBinding(AlarmLoginWindow.QuitAlarmLoginProperty, "QuitAlarmLogin");
+                    AlarmLoginWindow.HasShow = true;
+                    AlarmLoginWindow.Show();
+                })));
+        public bool ShowAlarmLoginWindow
+        {
+            get { return (bool)GetValue(ShowAlarmLoginWindowProperty); }
+            set { SetValue(ShowAlarmLoginWindowProperty, value); }
+        }
 
 
     }
