@@ -150,6 +150,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AlarmLoginWindow.xaml.cs">
+      <DependentUpon>AlarmLoginWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Models\AlarmData.cs" />
     <Compile Include="Models\CPublic.cs" />
     <Compile Include="Models\CReader.cs" />
@@ -169,6 +172,10 @@
     <Compile Include="Views\SampleWindow.xaml.cs">
       <DependentUpon>SampleWindow.xaml</DependentUpon>
     </Compile>
+    <Page Include="AlarmLoginWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

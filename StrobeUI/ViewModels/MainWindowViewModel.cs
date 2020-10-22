@@ -627,9 +627,11 @@ namespace StrobeUI.ViewModels
         UDPClient udp1 = new UDPClient();
         UDPClient udp2 = new UDPClient();
         bool[] M11000; bool plcstate = false;
+
+
         List<string> SampleBarcode = new List<string>();
         bool sampleTestStart = false, isInSampleMode = false, sampleTestAbort = false, sampleTestFinished = false;
-         List<AlarmData> AlarmList = new List<AlarmData>();
+         List<AlarmData> AlarmList = new List<AlarmData>(); int AlarmIndex = 0;
         string LastBanci;
         DateTime SamDateBigin, SamStartDatetime;
         int LampColor = 1;
@@ -641,6 +643,8 @@ namespace StrobeUI.ViewModels
         int AlarmCount = 0; double[] HD200; bool CardLockFlag; DateTime CardLockTime;
         Param paramJson;
         #endregion
+
+        public DelegateCommand AlarmGetCommand { get; set; }
         #region 构造函数
         public MainWindowViewModel()
         {
@@ -653,6 +657,7 @@ namespace StrobeUI.ViewModels
             this.BigDataPeramEditCommand = new DelegateCommand(new Action(this.BigDataPeramEditCommandExecute));
             this.BigDataAlarmGetCommand = new DelegateCommand(new Action(this.BigDataAlarmGetCommandCommandExecute));
             this.CleanActionCommand = new DelegateCommand(new Action(this.CleanActionCommandExecute));
+            this.AlarmGetCommand = new DelegateCommand(new Action(this.AlarmGetCommandExecute));//s/大数据
             Run();
         }
         #endregion
@@ -662,7 +667,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200827";
+                this.UIName = "D5XUI 20200925";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -796,10 +801,53 @@ namespace StrobeUI.ViewModels
             ZPUDPRun();
             UIRun();
             BigDataRun();
+            ReadplcM();
         }
+        bool M11169 = false;
+        bool M11166 = false, M11167 = false;
+        bool M11166old = false, M11167old = false;
+        bool start1 = false;
+        async void ReadplcM()
+        {
+            if (!start1)
+            { start1 = true; }
+            else
+            { return; }
+            while (start1)
+            {
+                Task taskReadplc = Task.Run(() => 
+                {
+                    System.Threading.Thread.Sleep(60);
+                    try
+                    {
+                        if (M11166 && !M11166old)
+                        {
+                            M11166old = true;
+                            Alarm_Login("TE工程师");
+                        }
+                        M11166old = M11166;
+                        if (M11167 && !M11167old)
+                        {
+                            M11167old = true;
+                            Alarm_Login("TELeader");
+                        }
+                        M11167old = M11167;
+                    }
+                    catch
+                    { }
+                });
+                await taskReadplc;
+            }
+
+
+
+        }
+
+        
         async void PLCRun()
         {
             bool first = true;
+            
             bool M11140 = false, M11141 = false, M11142 = false, M11150 = false, M11151 = false, M11152 = false, M11153 = false, M11154 = false;
             string COM = Inifile.INIGetStringValue(iniParameterPath, "PLC", "COM", "COM19");
             Random rd = new Random();
@@ -812,6 +860,9 @@ namespace StrobeUI.ViewModels
                 PLCStatus = plcstate ? "green" : "red";
                 if (plcstate)
                 {
+                    M11169 = await Task<bool[]>.Run(() => { return Xinjie.ReadM(11169); });
+                    M11166 = await Task<bool[]>.Run(() => { return Xinjie.ReadM(11166); });
+                    M11167 = await Task<bool[]>.Run(() => { return Xinjie.ReadM(11167); });
                     M11000 = await Task<bool[]>.Run(() => { return Xinjie.ReadMultiMCoil(11000); }); //读160个M
                     HD200 = await Task<double[]>.Run(() => { return Xinjie.readMultiHD(200); });
                     bool[] M100 = await Task<bool[]>.Run(() => { return Xinjie.ReadMultiMCoil(100); }); //读160个M
@@ -1201,10 +1252,13 @@ namespace StrobeUI.ViewModels
                     {
                         if (isInSampleMode && M11000[112])
                         {
-
                             bool res = CheckSampleFromDt();
                             Xinjie.SetM(11114, !res);
                             Xinjie.SetM(11110, false);
+                            if (NGceOK)
+                            {
+                                Xinjie.SetM(11168, true);//发给PLCNG测为了OK
+                            }
                             if (res)
                             {
                                 AddMessage("样本测试成功");
@@ -1391,6 +1445,9 @@ namespace StrobeUI.ViewModels
                 #endregion
             }
         }
+        int checkTotal = 0;
+
+
         async void BigDataRun()
         {
             int _LampColor = LampColor;
@@ -1415,16 +1472,17 @@ namespace StrobeUI.ViewModels
                             if (AlarmList[i].State)
                             {
                                 CurrentAlarm = AlarmList[i].Content;
-
+                                AlarmIndex = i;
                                 AlarmList[i].Start = DateTime.Now;
                                 AlarmList[i].End = DateTime.Now;
                                 AddMessage(AlarmList[i].Code + AlarmList[i].Content + "发生");
 
-
-
-                                AlarmAction(i);//等待报警结束
+                                if (M11169)
+                                {
+                                    AlarmAction1(i);//等待报警结束
+                                }
+                                
                             }
-
                         }
                     }
 
@@ -1544,30 +1602,83 @@ namespace StrobeUI.ViewModels
                 #endregion
                 GreenLampElapse = Math.Round(LampGreenSw.Elapsed.TotalMinutes, 1);
                 //#region 机台指标
-                //if (HD200 != null && plcstate)
-                //{
-                //    TimeSpan ts = DateTime.Now - GetBanStart();
-                //    //妥善率
-                //    double ProperlyRate = (ts.TotalMinutes - (double)LampYellowFlickerElapse  - (double)LampRedElapse ) / ts.TotalMinutes * 100;
-                //    //报警率
-                //    double AlarmRate = AlarmCount / HD200[6] * 100;
-                //    //达成率
-                //    double YieldRate = HD200[3] / ((ts.TotalMinutes - (double)LampGreenFlickerElapse - (double)LampYellowElapse) * (60 / HD200[7]) * 10) * 100;
-                //    //直通率
-                //    double PassRate = HD200[3] / HD200[6] * 100;
+                if (HD200 != null && plcstate)
+                {
+                    checkTotal = checkTotal + 1;
+                    if (checkTotal > 60)
+                    {
+                        checkTotal = 0;
+                        ReadAlarmCount();
+                    }
 
-                //    await Task.Run(() => { Xinjie.WriteW(410, (PassRate * 10).ToString("F0")); });//往D410写直通率，保留1位小数
-                //    await Task.Run(() => { Xinjie.WriteW(411, (AlarmRate * 10).ToString("F0")); });//往D410写报警率，保留1位小数
-                //    await Task.Run(() => { Xinjie.WriteW(412, (YieldRate * 10).ToString("F0")); });//往D411写达成率，保留1位小数
-                //    await Task.Run(() => { Xinjie.WriteW(413, (ProperlyRate * 10).ToString("F0")); });//往D413写妥善率，保留1位小数
+                    //TimeSpan ts = DateTime.Now - GetBanStart();
+                    //妥善率
+                    //double ProperlyRate = (ts.TotalMinutes - (double)LampYellowFlickerElapse - (double)LampRedElapse) / ts.TotalMinutes * 100;
+                    //报警率
+                    double AlarmRate = AlarmCount / HD200[6] * 100;
+                    //达成率
+                    //double YieldRate = HD200[3] / ((ts.TotalMinutes - (double)LampGreenFlickerElapse - (double)LampYellowElapse) * (60 / HD200[7]) * 10) * 100;
+                    //直通率
+                    //double PassRate = HD200[3] / HD200[6] * 100;
 
-                await Task.Run(() => { Xinjie.WriteW(401, AlarmCount.ToString()); });//往D401写报警次数
-                //}
+                    //await Task.Run(() => { Xinjie.WriteW(410, (PassRate * 10).ToString("F0")); });//往D410写直通率，保留1位小数
+                    await Task.Run(() => { Xinjie.WriteW(411, (AlarmRate * 10).ToString("F0")); });//往D411写报警率，保留1位小数
+                    //await Task.Run(() => { Xinjie.WriteW(412, (YieldRate * 10).ToString("F0")); });//往D412写达成率，保留1位小数
+                    //await Task.Run(() => { Xinjie.WriteW(413, (ProperlyRate * 10).ToString("F0")); });//往D413写妥善率，保留1位小数
+
+                    await Task.Run(() => { Xinjie.WriteW(401, AlarmCount.ToString()); });//往D401写报警次数
+                }
                 //#endregion
             }
 
         }
-        async void AlarmAction(int i)
+        async void AlarmAction(int i, string reason, string solution, string person)
+        {
+            //while (true)
+            //{
+            //    await Task.Delay(100);
+            //    try
+            //    {
+            //        if (LampGreenSw.Elapsed.TotalMinutes > 3)
+            //        {
+            //            break;
+            //        }
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        AddMessage("AlarmAction " + ex.Message);
+            //    }
+
+            //}
+            AlarmList[i].End = DateTime.Now;
+            AddMessage(AlarmList[i].Code + AlarmList[i].Content + "解除");
+            TimeSpan time = AlarmList[i].End - AlarmList[i].Start ;
+            
+
+
+            string result = await Task<string>.Run(() =>
+            {
+                try
+                {
+                    int _result = -999;
+                    Mysql mysql = new Mysql();
+                    if (mysql.Connect())
+                    {
+                        string stm = string.Format("INSERT INTO HA_F4_DATA_ALARM (PM, GROUP1,TRACK,MACID,NAME,SSTARTDATE,SSTARTTIME,SSTOPDATE,SSTOPTIME,TIME,CLASS,WORKSTATION,REASON,SOLUTION,PERSON) VALUES('{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}','{8}','{9}','{10}','{11}','{12}','{13}','{14}')"
+                            , PM, GROUP1, TRACK, MACID, AlarmList[i].Content, AlarmList[i].Start.ToString("yyyyMMdd"), AlarmList[i].Start.ToString("HHmmss"), AlarmList[i].End.ToString("yyyyMMdd"), AlarmList[i].End.ToString("HHmmss"), time.TotalMinutes.ToString("F1"), GetBanci(), WORKSTATION, reason, solution, person);
+                        _result = mysql.executeQuery(stm);
+                    }
+                    mysql.DisConnect();
+                    return _result.ToString();
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
+                }
+            });
+            AddMessage("插入报警" + result);
+        }
+        async void AlarmAction1(int i)
         {
             while (true)
             {
@@ -1633,10 +1744,14 @@ namespace StrobeUI.ViewModels
             });
             AddMessage("插入报警" + result);
         }
+        bool NGceOK = false;
+
+
         private bool CheckSampleFromDt()
         {
             //条码、时间=>表格
             //不良项目数量是否够？
+            NGceOK = false;
             try
             {
                 if (SampleBarcode.Count > 0)
@@ -1673,7 +1788,16 @@ namespace StrobeUI.ViewModels
                         }
                         Columns += dt.Columns[dt.Columns.Count - 1].ColumnName;
                         Csvfile.dt2csv(dt, "C:\\Debug\\" + DateTime.Now.ToString("yyyyMMdd") + "\\" + DateTime.Now.ToString("yyyyMMddHHmmss") + "Sample.csv", "Sample", Columns);
-
+                        //读取行,读取ng测试为OK
+                        int Row = dt.Rows.Count;
+                        for (int c = 0;c< Row;c++)
+                        {
+                            if (dt.Rows[c]["NGITEM"].ToString() != "PASS" && dt.Rows[c]["TRES"].ToString() == "PASS")
+                            {
+                                NGceOK = true;
+                            }
+                        }
+                            
                         try
                         {
                             Process process1 = new Process();
@@ -1800,6 +1924,16 @@ namespace StrobeUI.ViewModels
             passwordstr += ss;
             return passwordstr;
         }
+        string GetPassWord_Alarm()
+        {
+            int day = System.DateTime.Now.Day;
+            int month = System.DateTime.Now.Month;
+            string ss = (day ^ month).ToString();
+            return ss;
+        }
+
+
+
         public void RunLog(string str)
         {
             try
@@ -2021,7 +2155,38 @@ namespace StrobeUI.ViewModels
                 AddMessage("大数据参数保存");
             }
         }
-        private async void BigDataAlarmGetCommandCommandExecute()
+        private async void ReadAlarmCount()
+        {
+            var Read = await Task<string>.Run(() => 
+            {
+                try
+                {
+                    Mysql mysql = new Mysql();
+                    if (mysql.Connect())
+                    {
+                        string stm = string.Format("SELECT * FROM HA_F4_DATA_ALARM WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}' AND WORKSTATION = '{3}'", PM, MACID, GetBanci(), WORKSTATION);
+                        DataSet ds = mysql.Select(stm);
+
+                        DataTable dt = ds.Tables["table0"];
+                        if (dt.Rows.Count > 0)
+                        {
+                            AlarmCount = dt.Rows.Count;
+                        }
+                    }
+                    mysql.DisConnect();
+                }
+                catch (Exception ex)
+                {
+                    return ex.Message;
+                }
+                return "查询报警次数结束";
+            });
+            AddMessage(Read);
+        }
+
+
+
+        private async void BigDataAlarmGetCommandCommandExecute()//alarm
         {
             AlarmButtonIsEnabled = false;
 
@@ -2064,10 +2229,6 @@ namespace StrobeUI.ViewModels
 
                     }
                     mysql.DisConnect();
-
-
-
-
                 }
                 catch (Exception ex)
                 {
@@ -2091,6 +2252,242 @@ namespace StrobeUI.ViewModels
             Inifile.INIWriteValue(iniParameterPath, "Clean", "LastCleanTime", LastCleanTime.ToString());
             Task.Run(() => { Xinjie.SetM(11165, false); });
         }
+
+
+        #endregion
+        private void SaveAlarmCsv(string Alarmstr, string NO, string Name, string WAlarm, string Do)
+        {
+            string banci = GetBanci();
+            if (!Directory.Exists("D:\\异常记录"))
+            {
+                Directory.CreateDirectory("D:\\异常记录");
+            }
+            if (!File.Exists(Path.Combine("D:\\异常记录", "StrobeUI电测机异常记录" + banci + ".csv")))
+            {
+                string[] heads = new string[] { "时间", "内容", "工号", "名字", "报警原因", "处理措施" };
+                Csvfile.savetocsv(Path.Combine("D:\\异常记录", "StrobeUI电测机异常记录" + banci + ".csv"), heads);
+            }
+            string[] conts = new string[] { DateTime.Now.ToString(), Alarmstr, NO, Name, WAlarm, Do };
+            Csvfile.savetocsv(Path.Combine("D:\\异常记录", "StrobeUI电测机异常记录" + banci + ".csv"), conts);
+
+        }
+
+
+
+        #region 报警弹出框
+        public string TimeValue_Temp { set; get; }
+        public string AlarmValue_Temp { set; get; }
+        public string Level { set; get; } = "";
+        public string AlarmId { set; get; }//账号
+        public string AlarmPassword { set; get; }//密码
+        public string Alarm_PassWord { set; get; }//报警密码
+        public string WhyAlarm_Temp { set; get; }//报警原因
+        public string RepairAlarm_Temp { set; get; }//处理措施
+
+        private bool showAlarmLoginWindow;
+        public bool ShowAlarmLoginWindow //显示报警弹窗
+        {
+            get { return showAlarmLoginWindow; }
+            set
+            {
+                showAlarmLoginWindow = value;
+                this.RaisePropertyChanged("ShowAlarmLoginWindow");
+            }
+        }
+
+        //public bool QuitAlarmLogin { set; get; }
+        private bool quitAlarmLogin;
+        public bool QuitAlarmLogin
+        {
+            get { return quitAlarmLogin; }
+            set
+            {
+                quitAlarmLogin = value;
+                this.RaisePropertyChanged("QuitAlarmLogin");
+            }
+        }
+
+        public string alarm_Text = "";
+        public string Alarm_Text
+        {
+            get { return alarm_Text; }
+            set
+            {
+                alarm_Text = value;
+                this.RaisePropertyChanged("Alarm_Text");
+            }
+        }
+        private static string Leader_path = System.Environment.CurrentDirectory + "\\Opertaor\\Leader.ini";
+        private static string Tetester_path = System.Environment.CurrentDirectory + "\\Opertaor\\Tetester.ini";
+        private string ReadOperter(string opid, string Lv)
+        {
+            string strUser; int iUse = 0; string Name = "";
+            if (Lv == "TELeader")
+            {
+                iUse = int.Parse(Inifile.INIGetStringValue(Leader_path, "user Name", "NAMENUM", "0"));
+                for (int i = 0; i < iUse; i++)
+                {
+                    strUser = Inifile.INIGetStringValue(Leader_path, "UserId", $"GONGHAO{i}", "1111");
+                    if (opid == strUser)
+                    {
+                        Name = Inifile.INIGetStringValue(Leader_path, "UserId", $"NAME{i}", "1111");
+                    }
+                }
+
+            }
+            else if (Lv == "TE工程师")
+            {
+                iUse = int.Parse(Inifile.INIGetStringValue(Tetester_path, "user Name", "NAMENUM", "0"));
+                for (int i = 0; i < iUse; i++)
+                {
+                    strUser = Inifile.INIGetStringValue(Tetester_path, "UserId", $"GONGHAO{i}", "1111");
+                    if (opid == strUser)
+                    {
+                        Name = Inifile.INIGetStringValue(Tetester_path, "UserId", $"NAME{i}", "1111");
+                    }
+                }
+            }
+            if (Name != "" && Name != "1111")
+            {
+                return Name;
+            }
+            else
+            {
+                return "无";
+            }
+
+
+        }
+
+        private void AlarmGetCommandExecute()//登录按钮
+        {
+            string mAlarmId = "";
+            string psssword = "";
+            if (Level == "TE工程师")
+            {
+                if (AlarmId != "" && AlarmId != null && AlarmId.Length >= 8)
+                {
+                    mAlarmId = AlarmId;//账号
+                    psssword = AlarmId + GetPassWord();
+                    if (Alarm_PassWord == psssword)
+                    {
+                        Alarm_Text = "";
+                        string NAME = ReadOperter(mAlarmId, "TE工程师");
+                        if (NAME != "无")
+                        {
+                            if (AlarmValue_Temp != "" && WhyAlarm_Temp != "" && RepairAlarm_Temp != "")
+                            {
+                                if (AlarmValue_Temp != "NG")
+                                {
+                                    SaveAlarmCsv(AlarmValue_Temp, mAlarmId, NAME, WhyAlarm_Temp, RepairAlarm_Temp);//保存记录
+                                    QuitAlarmLogin = !QuitAlarmLogin;
+                                    Xinjie.SetM(11166, false);
+                                    AlarmAction(AlarmIndex, WhyAlarm_Temp, RepairAlarm_Temp, NAME);
+                                }
+                                else
+                                {
+                                    QuitAlarmLogin = !QuitAlarmLogin;
+                                    Xinjie.SetM(11166, false);
+                                }
+                            }
+                            else
+                            {
+                                Alarm_Text = "各项不能为空";
+                            }
+                        }
+                        else
+                        {
+                            Alarm_Text = "账号不为TE工程师";
+                        }
+                    }
+                    else
+                    {
+                        //密码错误
+                        Alarm_Text = "密码错误!";
+                    }
+
+                }
+            }
+            else if (Level == "TELeader")
+            {
+                if (AlarmId != "" && AlarmId != null && AlarmId.Length >= 8)
+                {
+                    mAlarmId = AlarmId;//账号
+                    psssword = AlarmId + GetPassWord_Alarm();
+                    if (Alarm_PassWord == psssword)
+                    {
+                        Alarm_Text = "";
+                        string NAME = ReadOperter(mAlarmId, "TELeader");
+                        if (NAME != "无")
+                        {
+                            if (AlarmValue_Temp != "" && WhyAlarm_Temp != "" && RepairAlarm_Temp != "")
+                            {
+                                if (AlarmValue_Temp != "NG")
+                                {
+                                    SaveAlarmCsv(AlarmValue_Temp, mAlarmId, NAME, WhyAlarm_Temp, RepairAlarm_Temp);//保存记录
+                                    QuitAlarmLogin = !QuitAlarmLogin;
+                                    Xinjie.SetM(11167, false);
+                                    AlarmAction(AlarmIndex, WhyAlarm_Temp, RepairAlarm_Temp, NAME);
+                                }
+                                else
+                                {
+                                    QuitAlarmLogin = !QuitAlarmLogin;
+                                    Xinjie.SetM(11167, false);
+                                }
+                            }
+                            else
+                            {
+                                Alarm_Text = "各项不得为空";
+                            }
+                        }
+                        else
+                        {
+                            Alarm_Text = "账号不为TELeader";
+                        }
+                    }
+                    else
+                    {
+                        Alarm_Text = "密码错误";
+                    }
+                }
+            }
+        }
+
+
+
+
+
+        public void Alarm_Login(string lev)
+        {
+            try
+            {
+                //ShowAlarmLoginWindow = !ShowAlarmLoginWindow;//显示界面
+                if (lev == "TE工程师")
+                {
+                    Level = "TE工程师";
+                }
+                else if (lev == "TELeader")
+                {
+                    Level = "TELeader";
+                }
+                TimeValue_Temp = DateTime.Now.ToString("yyyyMMdd HH:mm:ss");
+                if (CurrentAlarm != null && CurrentAlarm != "")
+                {
+                    AlarmValue_Temp = CurrentAlarm;
+                    CurrentAlarm = null;
+                }
+                else
+                { AlarmValue_Temp = "NG"; }
+                AlarmId = "";
+                Alarm_PassWord = "";
+                WhyAlarm_Temp = "";
+                RepairAlarm_Temp = "";
+                Alarm_Text = "";
+                ShowAlarmLoginWindow = !ShowAlarmLoginWindow;//显示界面
+            }
+            catch { }
+        }
+
         #endregion
     }
     public class Param
