@@ -662,7 +662,7 @@ namespace StrobeUI.ViewModels
             try
             {
                 #region 初始化页面内容
-                this.UIName = "D5XUI 20200716";
+                this.UIName = "D5XUI 20200827";
                 this.MessageStr = "";
                 this.BigDataEditIsReadOnly = true;
                 this.BigDataPeramEdit = "Edit";
@@ -1514,15 +1514,23 @@ namespace StrobeUI.ViewModels
                             try
                             {
                                 int _result = -999;
-                                Mysql mysql = new Mysql();
-                                if (mysql.Connect())
+                                if (HD200[6] > 0)
                                 {
-                                    double fpy = HD200[6] > 0 ? HD200[3] / HD200[6] * 100 : 0;
-                                    string stm = string.Format("UPDATE HA_F4_DATA_FPY SET INPUT = '{3}',OUTPUT = '{4}',FAIL = '{5}',FPY = '{6}' WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}' AND WORKSTATION = '{7}'"
-                                        , PM, MACID, GetBanci(), HD200[6].ToString("F0"), HD200[3].ToString("F0"), (HD200[6] - HD200[3]).ToString("F0"), fpy.ToString("F1"), WORKSTATION);
-                                    _result = mysql.executeQuery(stm);
+                                    Mysql mysql = new Mysql();
+                                    if (mysql.Connect())
+                                    {
+                                        double fpy = HD200[6] > 0 ? HD200[3] / HD200[6] * 100 : 0;
+                                        string stm = string.Format("UPDATE HA_F4_DATA_FPY SET INPUT = '{3}',OUTPUT = '{4}',FAIL = '{5}',FPY = '{6}' WHERE PM = '{0}' AND MACID = '{1}' AND CLASS = '{2}' AND WORKSTATION = '{7}'"
+                                            , PM, MACID, GetBanci(), HD200[6].ToString("F0"), HD200[3].ToString("F0"), (HD200[6] - HD200[3]).ToString("F0"), fpy.ToString("F1"), WORKSTATION);
+                                        _result = mysql.executeQuery(stm);
+                                    }
+                                    mysql.DisConnect();
                                 }
-                                mysql.DisConnect();
+                                else
+                                {
+                                    _result = -500;
+                                }
+
                                 return _result.ToString();
                             }
                             catch (Exception ex)
